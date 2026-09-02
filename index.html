@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Nova Line Network — Interactive Tetraktys Topology</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23050507'/%3E%3Crect x='4' y='4' width='8' height='8' fill='none' stroke='%23f4f4f5' stroke-width='2'/%3E%3C/svg%3E">
+    <style>
+        :root {
+            --bg: #050507;
+            --fg: #f4f4f5;
+            --muted: #8e8e93;
+            --border: #222226;
+            --border-active: #ffffff;
+            --card-bg: #0d0d11;
+            --card-hover: #17171d;
+            --grid-line: rgba(255, 255, 255, 0.04);
+            --badge-bg: #1c1c22;
+            --badge-fg: #ffffff;
+            --accent-glow: rgba(255, 255, 255, 0.15);
+            --ok: #34d399;
+            --ok-glow: rgba(52, 211, 153, 0.3);
+            --proc: #fbbf24;
+            --proc-glow: rgba(251, 191, 36, 0.3);
+            --down: #f87171;
+            --down-glow: rgba(248, 113, 113, 0.3);
+            --edge: #3a3a44;
+            --edge-active: #ffffff;
+        }
+
+        #theme-toggle:checked ~ .app {
+            --bg: #f5f5f7;
+            --fg: #0a0a0c;
+            --muted: #6e6e73;
+            --border: #d2d2d7;
+            --border-active: #000000;
+            --card-bg: #ffffff;
+            --card-hover: #eaeaea;
+            --grid-line: rgba(0, 0, 0, 0.04);
+            --badge-bg: #e5e5ea;
+            --badge-fg: #000000;
+            --accent-glow: rgba(0, 0, 0, 0.1);
+            --ok: #059669;
+            --ok-glow: rgba(5, 150, 105, 0.15);
+            --proc: #d97706;
+            --proc-glow: rgba(217, 119, 6, 0.15);
+            --down: #dc2626;
+            --down-glow: rgba(220, 38, 38, 0.15);
+            --edge: #c8c8cf;
+            --edge-active: #000000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: var(--bg);
+            color: var(--fg);
+        }
+
+        #theme-toggle { display: none; }
+
+        .app {
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+            background-image:
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 24px 24px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            padding: 12px;
+            gap: 8px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+        }
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.08em; text-transform: uppercase; }
+        .brand-square { width: 12px; height: 12px; border: 2px solid var(--fg); animation: pulse-square 2s ease-in-out infinite; }
+        @keyframes pulse-square { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .header-subtitle { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .header-controls { display: flex; align-items: center; gap: 8px; }
+        .theme-btn {
+            cursor: pointer; border: 1px solid var(--border); padding: 4px 10px; font-size: 0.65rem;
+            text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg); color: var(--fg);
+            user-select: none; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;
+        }
+        .theme-btn:hover { border-color: var(--border-active); background: var(--card-hover); }
+        .theme-indicator { width: 8px; height: 8px; border-radius: 50%; background: var(--fg); }
+
+        .action-btn {
+            cursor: pointer; border: 1px solid var(--border); padding: 4px 10px; font-size: 0.65rem;
+            text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg); color: var(--fg);
+            user-select: none; transition: all 0.2s ease; white-space: nowrap;
+        }
+        .action-btn:hover { border-color: var(--border-active); background: var(--card-hover); }
+        .action-btn.active-sim { border-color: var(--proc); color: var(--proc); box-shadow: 0 0 8px var(--proc-glow); }
+
+        .lang-switch { display: flex; border: 1px solid var(--border); overflow: hidden; }
+        .lang-btn {
+            cursor: pointer; border: none; background: var(--bg); color: var(--muted);
+            font-size: 0.6rem; font-weight: 700; padding: 4px 8px; font-family: inherit;
+            text-transform: uppercase; letter-spacing: 0.04em; transition: all 0.15s ease;
+        }
+        .lang-btn + .lang-btn { border-left: 1px solid var(--border); }
+        .lang-btn:hover { color: var(--fg); }
+        .lang-btn.active { background: var(--fg); color: var(--bg); }
+
+        /* Top 10 bar */
+        .grid-10-bar {
+            display: grid; grid-template-columns: repeat(10, 1fr);
+            border: 1px solid var(--border); background: var(--card-bg);
+        }
+        .grid-10-cell {
+            padding: 6px 2px; text-align: center; font-size: 0.6rem; font-weight: 600;
+            color: var(--muted); border-right: 1px solid var(--border);
+            transition: all 0.15s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            position: relative; cursor: pointer;
+        }
+        .grid-10-cell:last-child { border-right: none; }
+        .grid-10-cell:hover { background: var(--card-hover); color: var(--fg); }
+        .grid-10-cell .cell-status {
+            display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+            background: var(--muted); margin-right: 3px; transition: all 0.2s ease;
+        }
+        .grid-10-cell[data-status="ok"] .cell-status { background: var(--ok); box-shadow: 0 0 6px var(--ok-glow); }
+        .grid-10-cell[data-status="proc"] .cell-status { background: var(--proc); box-shadow: 0 0 6px var(--proc-glow); animation: blink 0.6s steps(2,start) infinite; }
+        .grid-10-cell[data-status="down"] .cell-status { background: var(--down); box-shadow: 0 0 6px var(--down-glow); }
+        @keyframes blink { 50% { opacity: 0.3; } }
+        .grid-10-cell.highlight { border-color: var(--border-active); color: var(--fg); }
+
+        /* Main viewport */
+        main {
+            display: flex; flex-direction: column; justify-content: space-evenly; align-items: center;
+            height: 100%; min-height: 0; gap: 4px; position: relative;
+        }
+
+        /* SVG connections layer */
+        #connections-layer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .connection-path { stroke: var(--edge); stroke-width: 1.5; fill: none; transition: stroke 0.2s ease; }
+        .connection-path.active { stroke: var(--edge-active); stroke-width: 2.5; filter: drop-shadow(0 0 4px var(--accent-glow)); }
+        .flow-dot { r: 2.5; fill: var(--edge-active); opacity: 0; }
+
+        .tetraktys-row {
+            display: flex; justify-content: center; align-items: center; gap: 12px;
+            width: 100%; flex: 1; min-height: 0; z-index: 2;
+        }
+
+        .square-node {
+            aspect-ratio: 1 / 1; max-height: 145px; max-width: 145px; flex: 0 0 auto;
+            background: var(--card-bg); border: 1px solid var(--border); padding: 8px;
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+            text-align: center; transition: all 0.2s ease; position: relative; cursor: pointer;
+        }
+        .square-node:hover { border-color: var(--border-active); background: var(--card-hover); transform: translateY(-2px); box-shadow: 0 4px 12px var(--accent-glow); }
+        .square-node[data-status="ok"] { box-shadow: inset 0 0 0 1px transparent; }
+        .square-node[data-status="proc"] { border-color: var(--proc); box-shadow: 0 0 14px var(--proc-glow); }
+        .square-node[data-status="down"] { border-color: var(--down); opacity: 0.7; }
+        .square-node.active-node { border-color: var(--border-active); box-shadow: 0 0 20px var(--accent-glow); transform: translateY(-3px) scale(1.03); }
+
+        .node-status-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto;
+            background: var(--muted); transition: all 0.2s ease; margin-left: 4px;
+        }
+        .node-status-dot[data-status="ok"] { background: var(--ok); box-shadow: 0 0 8px var(--ok-glow); }
+        .node-status-dot[data-status="proc"] { background: var(--proc); box-shadow: 0 0 8px var(--proc-glow); animation: blink 0.5s steps(2,start) infinite; }
+        .node-status-dot[data-status="down"] { background: var(--down); box-shadow: 0 0 8px var(--down-glow); }
+
+        .node-top { display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px dashed var(--border); padding-bottom: 3px; }
+        .node-id { font-size: 0.6rem; font-weight: 700; background: var(--badge-bg); color: var(--badge-fg); padding: 1px 4px; }
+        .node-lvl { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; }
+        .node-center { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; flex: 1; }
+        .node-name { font-size: clamp(0.65rem, 0.95vw, 0.75rem); font-weight: 700; color: var(--fg); line-height: 1.15; text-transform: uppercase; }
+        .node-tag { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+        .node-bottom { width: 100%; border-top: 1px dashed var(--border); padding-top: 3px; font-size: 0.55rem; color: var(--fg); opacity: 0.8; letter-spacing: 0.05em; text-transform: uppercase; }
+
+        .row-1 .square-node { border-width: 2px; border-color: var(--border-active); max-height: 155px; max-width: 155px; }
+
+        /* Detail panel */
+        #detail-panel {
+            position: absolute; right: 12px; top: 12px; z-index: 50; width: 240px;
+            background: var(--card-bg); border: 1px solid var(--border); padding: 12px;
+            display: none; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        }
+        #detail-panel.visible { display: block; animation: slidein 0.2s ease; }
+        @keyframes slidein { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+        #detail-panel h3 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+        #detail-panel .dp-tag { font-size: 0.6rem; color: var(--muted); margin-bottom: 8px; }
+        #detail-panel .dp-row { font-size: 0.6rem; display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px dashed var(--border); }
+        #detail-panel .dp-row span:first-child { color: var(--muted); }
+        #detail-panel .dp-desc { font-size: 0.6rem; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+        #detail-panel .dp-actions { display: flex; gap: 4px; margin-top: 10px; flex-wrap: wrap; }
+        #detail-panel .dp-btn {
+            cursor: pointer; border: 1px solid var(--border); padding: 3px 6px; font-size: 0.55rem;
+            text-transform: uppercase; background: var(--bg); color: var(--fg); transition: all 0.2s ease;
+        }
+        #detail-panel .dp-btn:hover { border-color: var(--border-active); }
+
+        /* Event log */
+        #event-log {
+            position: absolute; left: 12px; bottom: 12px; z-index: 50; width: 260px; max-height: 180px;
+            background: rgba(13,13,17,0.9); border: 1px solid var(--border); padding: 8px; overflow-y: auto;
+            font-size: 0.55rem; color: var(--muted); display: none;
+        }
+        #theme-toggle:checked ~ .app #event-log { background: rgba(255,255,255,0.92); }
+        #event-log.visible { display: block; }
+        #event-log .log-title { font-size: 0.6rem; color: var(--fg); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+        #event-log .log-line { padding: 1px 0; border-bottom: 1px dotted var(--border); }
+        #event-log .log-line .from { color: var(--muted); }
+        #event-log .log-line .arrow { color: var(--proc); }
+        #event-log .log-line .to { color: var(--fg); }
+
+        /* Footer */
+        footer {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 16px; border: 1px solid var(--border); background: var(--card-bg);
+            font-size: 0.6rem; color: var(--muted);
+        }
+        footer .net-health { display: flex; align-items: center; gap: 6px; }
+        footer .net-health .bar { display: flex; gap: 3px; align-items: flex-end; }
+        footer .net-health .seg { width: 3px; background: var(--muted); transition: all 0.2s; }
+        footer .net-health .seg.on { background: var(--ok); }
+        footer .net-health .seg.busy { background: var(--proc); }
+
+        @media (max-height: 600px) {
+            .square-node { padding: 4px; }
+            .node-bottom { display: none; }
+        }
+        @media (max-width: 700px) {
+            html, body { overflow: auto; }
+            .app { height: auto; min-height: 100vh; }
+            .tetraktys-row { flex-wrap: wrap; }
+            .square-node { max-height: none; width: 45%; }
+            .grid-10-bar { grid-template-columns: repeat(5, 1fr); }
+            #detail-panel, #event-log { position: fixed; }
+        }
+    </style>
+</head>
+<body>
+
+    <input type="checkbox" id="theme-toggle">
+
+    <div class="app">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <div class="brand-square"></div>
+                <span data-i18n="brand">Nova Line Network</span>
+            </div>
+            <div class="header-subtitle" data-i18n="subtitle">Interactive Tetraktys Modules Grid</div>
+            <div class="header-controls">
+                <button class="action-btn" id="btn-simulate" data-i18n="simulate">▶ Simulate Flow</button>
+                <button class="action-btn" id="btn-random" data-i18n="random">⚡ Random Load</button>
+                <button class="action-btn" id="btn-log" data-i18n="log">Log</button>
+                <div class="lang-switch">
+                    <button class="lang-btn active" data-lang="en">EN</button>
+                    <button class="lang-btn" data-lang="uk">UK</button>
+                    <button class="lang-btn" data-lang="ru">RU</button>
+                </div>
+                <label for="theme-toggle" class="theme-btn">
+                    <span class="theme-indicator"></span><span data-i18n="theme">Theme</span>
+                </label>
+            </div>
+        </header>
+
+        <!-- Top 10 bar -->
+        <div class="grid-10-bar" id="grid-bar"></div>
+
+        <!-- Main topology -->
+        <main>
+            <svg id="connections-layer"></svg>
+            <div class="tetraktys-row row-1" id="row-1"></div>
+            <div class="tetraktys-row row-2" id="row-2"></div>
+            <div class="tetraktys-row row-3" id="row-3"></div>
+            <div class="tetraktys-row row-4" id="row-4"></div>
+
+            <!-- Detail panel -->
+            <div id="detail-panel"></div>
+
+            <!-- Event log -->
+            <div id="event-log">
+                <div class="log-title">Event Stream</div>
+                <div id="log-body"></div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <div data-i18n="copyright">Nova Line Network &copy; 2026</div>
+            <div class="net-health">
+                <span data-i18n="net">NET</span>
+                <div class="bar" id="health-bar"></div>
+            </div>
+            <div data-i18n="footer-note">10 Agents · Live Dataflow Simulation</div>
+        </footer>
+    </div>
+
+    <script>
+    // Multi-language agent data
+    const L10N = {
+        agent: {
+            1: { en: ['Monad Prime','Origin Node','Orchestrator','Central command coordinator. Routes tasks to all downstream agents and synthesizes final output.'],
+                 uk: ['Монад Прайм','Первинний вузол','Оркестратор','Центральний координатор. Розподіляє завдання між усіма агентами та синтезує підсумковий результат.'],
+                 ru: ['Монад Прайм','Первичный узел','Оркестратор','Центральный координатор. Распределяет задачи между всеми агентами и синтезирует итоговый результат.'] },
+            2: { en: ['Strategic Architect','Strategy LLM','Blueprint','Designs strategy, plans and architectural blueprints for the network.'],
+                 uk: ['Стратегічний Архітектор','Стратегія LLM','Планування','Розробляє стратегію, плани та архітектурні проєкти мережі.'],
+                 ru: ['Стратегический Архитектор','Стратегия LLM','Проектирование','Разрабатывает стратегию, планы и архитектурные проекты сети.'] },
+            3: { en: ['Analytical Synthesizer','Analytics LLM','Data Feeds','Ingests raw data, performs analyses and synthesizes intelligence feeds.'],
+                 uk: ['Аналітичний Синтезатор','Аналітика LLM','Потоки даних','Збирає сирі дані, виконує аналіз і синтезує інформаційні потоки.'],
+                 ru: ['Аналитический Синтезатор','Аналитика LLM','Потоки данных','Собирает сырые данные, выполняет анализ и синтезирует информационные потоки.'] },
+            4: { en: ['Executive Decision','Decision LLM','Consensus','Makes executive decisions by reaching consensus across inputs.'],
+                 uk: ['Виконавче Рішення','Рішення LLM','Консенсус','Приймає виконавчі рішення, досягаючи консенсусу між входами.'],
+                 ru: ['Исполнительное Решение','Решения LLM','Консенсус','Принимает исполнительные решения, достигая консенсуса между входами.'] },
+            5: { en: ['Risk & Compliance','Risk LLM','Audit & Safety','Monitors risk, enforces compliance, and audits all agent actions.'],
+                 uk: ['Ризик і Комплаєнс','Ризик LLM','Аудит і безпека','Моніторить ризики, забезпечує відповідність і аудитує дії агентів.'],
+                 ru: ['Риск и Комплаенс','Риск LLM','Аудит и безопасность','Мониторит риски, обеспечивает соответствие и аудирует действия агентов.'] },
+            6: { en: ['Quality & Validation','QA LLM','Verification','Validates outputs, runs quality gates and verification checks.'],
+                 uk: ['Якість і Валідація','QA LLM','Верифікація','Валідує результати, виконує перевірки якості та верифікацію.'],
+                 ru: ['Качество и Валидация','QA LLM','Верификация','Валидирует результаты, выполняет проверки качества и верификацию.'] },
+            7: { en: ['Market Intel','Market LLM','Prediction','Provides market intelligence and prediction models.'],
+                 uk: ['Ринкова Розвідка','Ринок LLM','Прогнозування','Надає ринкову розвідку та моделі прогнозування.'],
+                 ru: ['Рыночная Разведка','Рынок LLM','Прогнозирование','Предоставляет рыночную разведку и модели прогнозирования.'] },
+            8: { en: ['Operational Ops','Ops LLM','Pipelines','Runs operational pipelines and automation workflows.'],
+                 uk: ['Оперативні Операції','Оперення LLM','Пайплайни','Запускає операційні пайплайни та автоматизацію процесів.'],
+                 ru: ['Операционные Операции','Операции LLM','Пайплайны','Запускает операционные пайплайны и автоматизацию процессов.'] },
+            9: { en: ['Financial Model','Finance LLM','Yield & Fiscal','Models financial outcomes, yield and fiscal projections.'],
+                 uk: ['Фінансова Модель','Фінанси LLM','Дохід і фіскальність','Моделює фінансові результати, дохід і фіскальні прогнози.'],
+                 ru: ['Финансовая Модель','Финансы LLM','Доход и фискальность','Моделирует финансовые результаты, доход и фискальные прогнозы.'] },
+            10:{ en: ['Client Synergy','Client LLM','User Interface','Front-facing agent. Interfaces directly with users and clients.'],
+                 uk: ['Клієнтська Синергія','Клієнт LLM','Інтерфейс','Зовнішній агент. Безпосередньо взаємодіє з користувачами та клієнтами.'],
+                 ru: ['Клиентская Синергия','Клиент LLM','Интерфейс','Внешний агент. Напрямую взаимодействует с пользователями и клиентами.'] }
+        }
+    };
+
+    const AGENTS = [
+        { id: 1, key: 'MONAD',  row: 1, lvl: 'L-I Monad' },
+        { id: 2, key: 'ARCH',   row: 2, lvl: 'L-II Dyad' },
+        { id: 3, key: 'SYNTH',  row: 2, lvl: 'L-II Dyad' },
+        { id: 4, key: 'EXEC',   row: 3, lvl: 'L-III Triad' },
+        { id: 5, key: 'RISK',   row: 3, lvl: 'L-III Triad' },
+        { id: 6, key: 'QUAL',   row: 3, lvl: 'L-III Triad' },
+        { id: 7, key: 'MKT',    row: 4, lvl: 'L-IV Tetrad' },
+        { id: 8, key: 'OPS',    row: 4, lvl: 'L-IV Tetrad' },
+        { id: 9, key: 'FIN',    row: 4, lvl: 'L-IV Tetrad' },
+        { id: 10,key: 'SYNERGY',row: 4, lvl: 'L-IV Tetrad' }
+    ];
+
+    // Dataflow topology: parent -> children (directed from apex downward)
+    const TOPOLOGY = [
+        [1, 2], [1, 3],
+        [2, 4], [2, 5], [2, 6],
+        [3, 4], [3, 5], [3, 6],
+        [4, 7], [4, 8], [4, 9],
+        [5, 7], [5, 8], [5, 9], [5, 10],
+        [6, 7], [6, 8], [6, 9], [6, 10]
+    ];
+
+    const state = {};
+    AGENTS.forEach(a => { state[a.id] = { status: 'ok', msg: '' }; });
+
+    const elNodes = {};
+    let simTimer = null;
+
+    // ---- Build DOM ----
+    function buildNodes() {
+        AGENTS.forEach(a => {
+            const cell = document.createElement('div');
+            cell.className = 'grid-10-cell';
+            cell.dataset.id = a.id;
+            cell.innerHTML = `<span class="cell-status" data-status="${state[a.id].status}"></span>${String(a.id).padStart(2,'0')}. ${a.key}`;
+            document.getElementById('grid-bar').appendChild(cell);
+            cell.addEventListener('click', () => showDetail(a.id));
+
+            const node = document.createElement('div');
+            node.className = 'square-node';
+            node.dataset.id = a.id;
+            node.dataset.status = 'ok';
+            node.innerHTML = `
+                <div class="node-top">
+                    <span class="node-id">${String(a.id).padStart(2,'0')}</span>
+                    <span class="node-lvl">${a.lvl}</span>
+                    <span class="node-status-dot" data-status="ok"></span>
+                </div>
+                <div class="node-center">
+                    <div class="node-name" data-i18n-node="name">Loading…</div>
+                    <div class="node-tag" data-i18n-node="tag">…</div>
+                </div>
+                <div class="node-bottom" data-i18n-node="role">…</div>
+            `;
+            document.getElementById('row-' + a.row).appendChild(node);
+            node.addEventListener('click', e => { e.stopPropagation(); showDetail(a.id); });
+            elNodes[a.id] = node;
+        });
+    }
+
+    // ---- i18n core ----
+    let currentLang = 'en';
+    const I18N = {
+        en: { brand:'Nova Line Network', subtitle:'Interactive Tetraktys Modules Grid', simulate:'▶ Simulate Flow', random:'⚡ Random Load', log:'Log', theme:'Theme', net:'NET', copyright:'Nova Line Network © 2026', footerNote:'10 Agents · Live Dataflow Simulation', simStart:'== SIMULATION START ==', simComplete:'== SIMULATION COMPLETE ==', simStop:'== SIMULATION STOPPED ==', detailRole:'Role', detailLevel:'Level', detailStatus:'Status', detailOnline:'ONLINE', detailProcessing:'PROCESSING', detailOffline:'OFFLINE', actPing:'Ping', actPulse:'Pulse', actToggle:'Toggle', logTitle:'Event Stream', pong:'pong', down:'OFFLINE', up:'ONLINE' },
+        uk: { brand:'Nova Line Network', subtitle:'Інтерактивна Тетрактис Модульна Сітка', simulate:'▶ Запуск потоку', random:'⚡ Випадкове навантаження', log:'Журнал', theme:'Тема', net:'МЕРЕЖА', copyright:'Nova Line Network © 2026', footerNote:'10 Агентів · Жива симуляція потоків даних', simStart:'== ПОЧАТОК СИМУЛЯЦІЇ ==', simComplete:'== СИМУЛЯЦІЮ ЗАВЕРШЕНО ==', simStop:'== СИМУЛЯЦІЮ ЗУПИНЕНО ==', detailRole:'Роль', detailLevel:'Рівень', detailStatus:'Статус', detailOnline:'ОНЛАЙН', detailProcessing:'ОБРОБКА', detailOffline:'ОФЛАЙН', actPing:'Пінг', actPulse:'Пульс', actToggle:'Перемкнути', logTitle:'Потік подій', pong:'понг', down:'ОФЛАЙН', up:'ОНЛАЙН' },
+        ru: { brand:'Nova Line Network', subtitle:'Интерактивная Тетрактис Модульная Сетка', simulate:'▶ Запуск потока', random:'⚡ Случайная нагрузка', log:'Журнал', theme:'Тема', net:'СЕТЬ', copyright:'Nova Line Network © 2026', footerNote:'10 Агентов · Живая симуляция потоков данных', simStart:'== НАЧАЛО СИМУЛЯЦИИ ==', simComplete:'== СИМУЛЯЦИЯ ЗАВЕРШЕНА ==', simStop:'== СИМУЛЯЦИЯ ОСТАНОВЛЕНА ==', detailRole:'Роль', detailLevel:'Уровень', detailStatus:'Статус', detailOnline:'ОНЛАЙН', detailProcessing:'ОБРАБОТКА', detailOffline:'ОФЛАЙН', actPing:'Пинг', actPulse:'Пульс', actToggle:'Переключить', logTitle:'Поток событий', pong:'понг', down:'ОФЛАЙН', up:'ОНЛАЙН' }
+    };
+
+    function applyLang(lang) {
+        const t = I18N[lang];
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const k = el.dataset.i18n;
+            if (k === 'brand') el.textContent = t.brand;
+            else if (k === 'subtitle') el.textContent = t.subtitle;
+            else if (k === 'copyright') el.textContent = t.copyright;
+            else if (k === 'net') el.textContent = t.net;
+            else if (k === 'footer-note') el.textContent = t.footerNote;
+        });
+        document.getElementById('btn-simulate').textContent = t.simulate;
+        document.getElementById('btn-random').textContent = t.random;
+        document.getElementById('btn-log').textContent = t.log;
+        // theme label
+        document.querySelectorAll('.theme-btn span:last-child').forEach(s => s.textContent = t.theme);
+
+        // agent nodes
+        AGENTS.forEach(a => {
+            const d = L10N.agent[a.id][lang];
+            const node = elNodes[a.id];
+            if (!node) return;
+            node.querySelector('[data-i18n-node="name"]').textContent = d[0];
+            node.querySelector('[data-i18n-node="tag"]').textContent = d[1];
+            node.querySelector('[data-i18n-node="role"]').textContent = d[2];
+        });
+
+        // re-render detail panel if visible
+        const dp = document.getElementById('detail-panel');
+        const dpId = dp.dataset.agentId;
+        if (dp.classList.contains('visible') && dpId) showDetail(Number(dpId));
+        // log title
+        document.querySelector('#event-log .log-title').textContent = t.logTitle;
+
+        // update lang buttons
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    }
+
+    // ---- Build SVG connections with node coordinates ----
+    function buildConnections() {
+        const layer = document.getElementById('connections-layer');
+        layer.innerHTML = '';
+        // define defs
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        layer.appendChild(defs);
+
+        TOPOLOGY.forEach(([from, to]) => {
+            const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            p.setAttribute('class', 'connection-path');
+            p.dataset.edge = from + '-' + to;
+            p.setAttribute('data-from', from);
+            p.setAttribute('data-to', to);
+            layer.appendChild(p);
+        });
+    }
+
+    function nodeCenter(id) {
+        const node = elNodes[id];
+        const layer = document.getElementById('connections-layer');
+        const r = node.getBoundingClientRect();
+        const lr = layer.getBoundingClientRect();
+        return {
+            x: r.left + r.width / 2 - lr.left,
+            y: r.top + r.height / 2 - lr.top
+        };
+    }
+
+    function updatePaths() {
+        document.querySelectorAll('.connection-path').forEach(p => {
+            const from = nodeCenter(p.dataset.from);
+            const to = nodeCenter(p.dataset.to);
+            const mx = (from.x + to.x) / 2;
+            const my = (from.y + to.y) / 2;
+            p.setAttribute('d', `M${from.x},${from.y} Q${from.x},${my} ${mx},${my} T${to.x},${to.y}`);
+        });
+    }
+
+    // ---- Status helpers ----
+    function setStatus(id, status, opts = {}) {
+        if (state[id]) state[id].status = status;
+        const node = elNodes[id];
+        if (node) {
+            node.dataset.status = status;
+            node.querySelector('.node-status-dot').dataset.status = status;
+        }
+        const cell = document.querySelector(`.grid-10-cell[data-id="${id}"]`);
+        if (cell) {
+            cell.dataset.status = status;
+            cell.querySelector('.cell-status').dataset.status = status;
+        }
+        if (opts.highlight) highlightCell(id);
+        refreshHealth();
+    }
+
+    function highlightCell(id) {
+        document.querySelectorAll('.grid-10-cell').forEach(c => c.classList.remove('highlight'));
+        const cell = document.querySelector(`.grid-10-cell[data-id="${id}"]`);
+        if (cell) cell.classList.add('highlight');
+    }
+
+    // ---- Edge animation ----
+    function animateFlow(from, to) {
+        const path = document.querySelector(`.connection-path[data-from="${from}"][data-to="${to}"]`);
+        const layer = document.getElementById('connections-layer');
+        if (!path || !layer) return;
+        path.classList.add('active');
+
+        // animate a dot along the path
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('class', 'flow-dot');
+        const len = path.getTotalLength();
+        layer.appendChild(dot);
+
+        const start = performance.now();
+        const dur = 700;
+        function tick(now) {
+            const t = Math.min((now - start) / dur, 1);
+            const pt = path.getPointAtLength(len * t);
+            dot.setAttribute('cx', pt.x);
+            dot.setAttribute('cy', pt.y);
+            dot.setAttribute('opacity', Math.sin(t * Math.PI));
+            if (t < 1) requestAnimationFrame(tick);
+            else { dot.remove(); path.classList.remove('active'); }
+        }
+        requestAnimationFrame(tick);
+    }
+
+    // ---- Reality engine: message passing with latency ----
+    const MESSAGES = [
+        'payload.idx', 'risk.score', 'market.signal', 'quality.gate',
+        'fin.model', 'ops.token', 'client.req', 'intel.feed', 'consensus', 'audit.trail'
+    ];
+
+    function sendMessage(from, to) {
+        const a = AGENTS.find(x => x.id === from);
+        const b = AGENTS.find(x => x.id === to);
+        const msg = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+        log(`N${String(from).padStart(2,'0')} ${a.key}` + ' →→ ' + `N${String(to).padStart(2,'0')} ${b.key}  (${msg})`);
+
+        setStatus(from, 'proc', { highlight: true });
+        animateFlow(from, to);
+        const latency = 300 + Math.random() * 500;
+        setTimeout(() => {
+            setStatus(to, 'proc');
+            setTimeout(() => {
+                setStatus(from, 'ok');
+                setStatus(to, 'ok');
+                refreshHealth();
+            }, 200 + Math.random() * 400);
+        }, latency);
+    }
+
+    // ---- Simulation: run a realistic workflow ----
+    function runSimulation() {
+        if (simTimer) return;
+
+        // Broadcast storm: apex pulses downstream in waves
+        log(I18N[currentLang].simStart);
+
+        // Wave 1: Monad -> level 4 (through intermediates)
+        setTimeout(() => sendMessage(1, 2), 100);
+        setTimeout(() => sendMessage(1, 3), 600);
+
+        // Wave 2: architects/synthesizers -> triad
+        setTimeout(() => { sendMessage(2, 4); sendMessage(2, 5); sendMessage(3, 6); }, 1400);
+        setTimeout(() => { sendMessage(3, 4); sendMessage(2, 6); sendMessage(3, 5); }, 2100);
+
+        // Wave 3: triad -> tetrad
+        setTimeout(() => { sendMessage(4, 7); sendMessage(4, 8); sendMessage(5, 9); sendMessage(6, 10); }, 3000);
+        setTimeout(() => { sendMessage(4, 9); sendMessage(5, 8); sendMessage(6, 7); sendMessage(5, 10); }, 3600);
+
+        setTimeout(() => {
+            log(I18N[currentLang].simComplete);
+            simTimer = null;
+            toggleSimBtn(false);
+        }, 4800);
+    }
+
+    function toggleSimBtn(on) {
+        const btn = document.getElementById('btn-simulate');
+        btn.classList.toggle('active-sim', on);
+        btn.textContent = on ? '■ ' + I18N[currentLang].simulate.replace('▶ ', '') : I18N[currentLang].simulate;
+    }
+
+    // ---- Random load generator (keeps network alive) ----
+    function randomLoad() {
+        const from = 1 + Math.floor(Math.random() * 10);
+        const candidates = TOPOLOGY.filter(t => t[0] === from).map(t => t[1]);
+        const downstream = TOPOLOGY.filter(t => t[1] === from).map(t => t[0]);
+        const pool = candidates.concat(downstream);
+        if (pool.length === 0) { setStatus(from, 'proc'); setTimeout(()=>setStatus(from,'ok'),400); return; }
+        const to = pool[Math.floor(Math.random() * pool.length)];
+        sendMessage(from, to);
+    }
+
+    // ---- Detail panel ----
+    function showDetail(id) {
+        const a = AGENTS.find(x => x.id === id);
+        const panel = document.getElementById('detail-panel');
+        const st = state[a.id].status;
+        const t = I18N[currentLang];
+        const d = L10N.agent[a.id][currentLang];
+        const stLabel = st === 'ok' ? t.detailOnline : st === 'proc' ? t.detailProcessing : t.detailOffline;
+        panel.dataset.agentId = id;
+        panel.innerHTML = `
+            <h3>N${String(a.id).padStart(2,'0')} · ${a.key}</h3>
+            <div class="dp-tag">${d[0]} — ${d[1]}</div>
+            <div class="dp-row"><span>${t.detailRole}</span><span>${d[2]}</span></div>
+            <div class="dp-row"><span>${t.detailLevel}</span><span>${a.lvl}</span></div>
+            <div class="dp-row"><span>${t.detailStatus}</span><span>${stLabel}</span></div>
+            <div class="dp-desc">${d[3]}</div>
+            <div class="dp-actions">
+                <button class="dp-btn" data-act="ping">${t.actPing}</button>
+                <button class="dp-btn" data-act="pulse">${t.actPulse}</button>
+                <button class="dp-btn" data-act="down">${t.actToggle}</button>
+            </div>
+        `;
+        panel.classList.add('visible');
+        panel.querySelectorAll('.dp-btn').forEach(b => {
+            b.addEventListener('click', e => {
+                const act = e.target.dataset.act;
+                const t = I18N[currentLang];
+                if (act === 'ping') { setStatus(id, 'proc'); setTimeout(() => setStatus(id, state[id].status === 'down' ? 'down' : 'ok'), 400); log(`N${String(id).padStart(2,'0')} ${t.pong}`); }
+                if (act === 'pulse') { sendToRandomNeighbor(id); }
+                if (act === 'down') {
+                    const newSt = state[id].status === 'down' ? 'ok' : 'down';
+                    setStatus(id, newSt);
+                    log(`N${String(id).padStart(2,'0')} ${newSt === 'down' ? t.down : t.up}`);
+                }
+            });
+        });
+    }
+    function closeDetail() {}
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.square-node') && !e.target.closest('#detail-panel')) {
+            document.getElementById('detail-panel').classList.remove('visible');
+        }
+    });
+
+    function sendToRandomNeighbor(id) {
+        const candidates = TOPOLOGY.filter(t => t[0] === id).map(t => t[1]);
+        const downstream = TOPOLOGY.filter(t => t[1] === id).map(t => t[0]);
+        const pool = candidates.concat(downstream);
+        if (pool.length === 0) { setStatus(id, 'proc'); setTimeout(()=>setStatus(id,'ok'),400); return; }
+        const to = pool[Math.floor(Math.random() * pool.length)];
+        sendMessage(id, to);
+    }
+
+    // ---- Event log ----
+    function log(text) {
+        const body = document.getElementById('log-body');
+        const line = document.createElement('div');
+        line.className = 'log-line';
+        line.textContent = text;
+        body.prepend(line);
+        while (body.children.length > 40) body.removeChild(body.lastChild);
+    }
+
+    // ---- Health bar (footer) ----
+    function refreshHealth() {
+        const bar = document.getElementById('health-bar');
+        let html = '';
+        AGENTS.forEach(a => {
+            const st = state[a.id].status;
+            const cls = st === 'down' ? '' : st === 'proc' ? 'busy' : 'on';
+            const h = st === 'down' ? 3 : st === 'proc' ? 14 : 6;
+            html += `<div class="seg ${cls}" style="height:${h}px"></div>`;
+        });
+        bar.innerHTML = html;
+    }
+
+    // ---- Global controls ----
+    document.getElementById('btn-simulate').addEventListener('click', () => {
+        if (simTimer) {
+            clearTimeout(simTimer); simTimer = null;
+            AGENTS.forEach(a => setStatus(a.id, 'ok'));
+            toggleSimBtn(false);
+            log(I18N[currentLang].simStop);
+        } else {
+            simTimer = true;
+            toggleSimBtn(true);
+            runSimulation();
+        }
+    });
+    document.getElementById('btn-random').addEventListener('click', () => {
+        for (let i = 0; i < 3; i++) setTimeout(randomLoad, i * 300);
+    });
+    document.getElementById('btn-log').addEventListener('click', () => {
+        document.getElementById('event-log').classList.toggle('visible');
+    });
+
+    // ---- Language switch ----
+    document.querySelectorAll('.lang-btn').forEach(b => {
+        b.addEventListener('click', () => {
+            currentLang = b.dataset.lang;
+            applyLang(currentLang);
+        });
+    });
+
+    // Init
+    buildNodes();
+    buildConnections();
+    updatePaths();
+    refreshHealth();
+    applyLang('en');
+    window.addEventListener('resize', updatePaths);
+
+    // Ambient heartbeat: subtle random activity so it feels alive
+    setInterval(() => { if (!simTimer && Math.random() < 0.4) randomLoad(); }, 2800);
+    </script>
+</body>
+</html>

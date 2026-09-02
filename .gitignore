@@ -1,0 +1,9 @@
+# Playwright MCP test artifacts
+.playwright-mcp/
+*.log
+*.yml
+*.png
+
+# OS files
+.DS_Store
+Thumbs.db
