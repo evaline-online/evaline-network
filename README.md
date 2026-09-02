@@ -1,10 +1,12 @@
-# Nova Line Network
+# EvaLine Network
 
-Interactive **Tetraktys Topology** visualizing a network of **10 LLM agents** (Monad → Architect → Synthesizer → ... → Client Synergy). Deployed to **https://evaline.network/**.
+Interactive **Tetraktys Topology** visualizing the **10 business agents** of the **EvaLine EVA foam manufacturer** — mapping the real company functions (from raw EVA sheets to finished goods) onto a 1-2-3-4 pyramid network. Deployed to **https://evaline.network/**.
+
+Built from the `evaline-com-ua` business archive research.
 
 ## Features
 
-- **10 connected agents** in a 1-2-3-4 pyramid (square tetraktys)
+- **10 connected business agents** in a 1-2-3-4 pyramid (square tetraktys) — all squares identical size
 - **Live dataflow simulation**: animated SVG edges, message passing between nodes
 - **Real interaction**: click any node → detail panel (Ping / Pulse / Toggle online)
 - **Status indicators**: ONLINE / PROCESSING / OFFLINE on every node + NET health bar
@@ -12,20 +14,20 @@ Interactive **Tetraktys Topology** visualizing a network of **10 LLM agents** (M
 - **Dark / Light theme** toggle
 - Pure HTML/CSS/JS (no framework), Roboto Mono
 
-## The 10 Agents
+## The 10 Business Agents
 
-| # | Key | Agent | Role |
+| # | Key | Agent | Line |
 |---|-----|-------|------|
-| 01 | MONAD | Monad Prime | Orchestrator |
-| 02 | ARCH | Strategic Architect | Strategy / Blueprint |
-| 03 | SYNTH | Analytical Synthesizer | Analytics / Data Feeds |
-| 04 | EXEC | Executive Decision | Decision / Consensus |
-| 05 | RISK | Risk & Compliance | Audit & Safety |
-| 06 | QUAL | Quality & Validation | Verification |
-| 07 | MKT | Market Intel | Prediction |
-| 08 | OPS | Operational Ops | Pipelines |
-| 09 | FIN | Financial Model | Yield & Fiscal |
-| 10 | SYNERGY | Client Synergy | User Interface |
+| 01 | HQ | Brand HQ | Headquarters / Orchestrator |
+| 02 | PROD | Production | EVA sheets & figure cutting |
+| 03 | SUPPLY | Supply & Compliance | Procurement / Certifications |
+| 04 | B2B | B2B Sales | Wholesale / Production orders |
+| 05 | B2C | B2C Retail | Online shop / Consumer |
+| 06 | SPORT | Sports Line | Tatami & sports mats |
+| 07 | AUTO | Auto Line | Car mats & EVA sheets |
+| 08 | AGRO | Agro Line | Livestock mats "Buryonka" |
+| 09 | SHOE | Shoe Line | Soles & insoles |
+| 10 | SRVC | Client Service | Support / Private Label |
 
 ## Deploy
 

@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Nova Line Network — Interactive Tetraktys Topology</title>
+    <title>EvaLine Network — 10 Business Agents · EVA Manufacturer Topology</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
@@ -170,7 +170,8 @@
         }
 
         .square-node {
-            aspect-ratio: 1 / 1; max-height: 145px; max-width: 145px; flex: 0 0 auto;
+            width: clamp(112px, 14vw, 148px); height: clamp(112px, 14vw, 148px);
+            flex: 0 0 auto; box-sizing: border-box;
             background: var(--card-bg); border: 1px solid var(--border); padding: 8px;
             display: flex; flex-direction: column; justify-content: space-between; align-items: center;
             text-align: center; transition: all 0.2s ease; position: relative; cursor: pointer;
@@ -197,7 +198,7 @@
         .node-tag { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
         .node-bottom { width: 100%; border-top: 1px dashed var(--border); padding-top: 3px; font-size: 0.55rem; color: var(--fg); opacity: 0.8; letter-spacing: 0.05em; text-transform: uppercase; }
 
-        .row-1 .square-node { border-width: 2px; border-color: var(--border-active); max-height: 155px; max-width: 155px; }
+        .row-1 .square-node { border-width: 2px; border-color: var(--border-active); }
 
         /* Detail panel */
         #detail-panel {
@@ -253,7 +254,7 @@
             html, body { overflow: auto; }
             .app { height: auto; min-height: 100vh; }
             .tetraktys-row { flex-wrap: wrap; }
-            .square-node { max-height: none; width: 45%; }
+            .square-node { width: clamp(96px, 30vw, 148px); height: clamp(96px, 30vw, 148px); }
             .grid-10-bar { grid-template-columns: repeat(5, 1fr); }
             #detail-panel, #event-log { position: fixed; }
         }
@@ -320,52 +321,54 @@
 
     <script>
     // Multi-language agent data
+    // EvaLine business agents — 10 LLM nodes reflecting the real functions of the
+    // EVA foam manufacturer (from sheets to finished goods, across all business lines).
     const L10N = {
         agent: {
-            1: { en: ['Monad Prime','Origin Node','Orchestrator','Central command coordinator. Routes tasks to all downstream agents and synthesizes final output.'],
-                 uk: ['Монад Прайм','Первинний вузол','Оркестратор','Центральний координатор. Розподіляє завдання між усіма агентами та синтезує підсумковий результат.'],
-                 ru: ['Монад Прайм','Первичный узел','Оркестратор','Центральный координатор. Распределяет задачи между всеми агентами и синтезирует итоговый результат.'] },
-            2: { en: ['Strategic Architect','Strategy LLM','Blueprint','Designs strategy, plans and architectural blueprints for the network.'],
-                 uk: ['Стратегічний Архітектор','Стратегія LLM','Планування','Розробляє стратегію, плани та архітектурні проєкти мережі.'],
-                 ru: ['Стратегический Архитектор','Стратегия LLM','Проектирование','Разрабатывает стратегию, планы и архитектурные проекты сети.'] },
-            3: { en: ['Analytical Synthesizer','Analytics LLM','Data Feeds','Ingests raw data, performs analyses and synthesizes intelligence feeds.'],
-                 uk: ['Аналітичний Синтезатор','Аналітика LLM','Потоки даних','Збирає сирі дані, виконує аналіз і синтезує інформаційні потоки.'],
-                 ru: ['Аналитический Синтезатор','Аналитика LLM','Потоки данных','Собирает сырые данные, выполняет анализ и синтезирует информационные потоки.'] },
-            4: { en: ['Executive Decision','Decision LLM','Consensus','Makes executive decisions by reaching consensus across inputs.'],
-                 uk: ['Виконавче Рішення','Рішення LLM','Консенсус','Приймає виконавчі рішення, досягаючи консенсусу між входами.'],
-                 ru: ['Исполнительное Решение','Решения LLM','Консенсус','Принимает исполнительные решения, достигая консенсуса между входами.'] },
-            5: { en: ['Risk & Compliance','Risk LLM','Audit & Safety','Monitors risk, enforces compliance, and audits all agent actions.'],
-                 uk: ['Ризик і Комплаєнс','Ризик LLM','Аудит і безпека','Моніторить ризики, забезпечує відповідність і аудитує дії агентів.'],
-                 ru: ['Риск и Комплаенс','Риск LLM','Аудит и безопасность','Мониторит риски, обеспечивает соответствие и аудирует действия агентов.'] },
-            6: { en: ['Quality & Validation','QA LLM','Verification','Validates outputs, runs quality gates and verification checks.'],
-                 uk: ['Якість і Валідація','QA LLM','Верифікація','Валідує результати, виконує перевірки якості та верифікацію.'],
-                 ru: ['Качество и Валидация','QA LLM','Верификация','Валидирует результаты, выполняет проверки качества и верификацию.'] },
-            7: { en: ['Market Intel','Market LLM','Prediction','Provides market intelligence and prediction models.'],
-                 uk: ['Ринкова Розвідка','Ринок LLM','Прогнозування','Надає ринкову розвідку та моделі прогнозування.'],
-                 ru: ['Рыночная Разведка','Рынок LLM','Прогнозирование','Предоставляет рыночную разведку и модели прогнозирования.'] },
-            8: { en: ['Operational Ops','Ops LLM','Pipelines','Runs operational pipelines and automation workflows.'],
-                 uk: ['Оперативні Операції','Оперення LLM','Пайплайни','Запускає операційні пайплайни та автоматизацію процесів.'],
-                 ru: ['Операционные Операции','Операции LLM','Пайплайны','Запускает операционные пайплайны и автоматизацию процессов.'] },
-            9: { en: ['Financial Model','Finance LLM','Yield & Fiscal','Models financial outcomes, yield and fiscal projections.'],
-                 uk: ['Фінансова Модель','Фінанси LLM','Дохід і фіскальність','Моделює фінансові результати, дохід і фіскальні прогнози.'],
-                 ru: ['Финансовая Модель','Финансы LLM','Доход и фискальность','Моделирует финансовые результаты, доход и фискальные прогнозы.'] },
-            10:{ en: ['Client Synergy','Client LLM','User Interface','Front-facing agent. Interfaces directly with users and clients.'],
-                 uk: ['Клієнтська Синергія','Клієнт LLM','Інтерфейс','Зовнішній агент. Безпосередньо взаємодіє з користувачами та клієнтами.'],
-                 ru: ['Клиентская Синергия','Клиент LLM','Интерфейс','Внешний агент. Напрямую взаимодействует с пользователями и клиентами.'] }
+            1: { en: ['Brand HQ','EvaLine Core','Headquarters','EvaLine command seat. A fully integrated EVA manufacturer from raw sheets to finished goods — directs all business lines and sets the company strategy.'],
+                 uk: ['Штаб Бренду','Ядро EvaLine','Головний офіс','Керівний центр EvaLine. Повний цикл виробництва EVA від листів до готової продукції — керує всіма напрямками бізнесу та формує стратегію.'],
+                 ru: ['Штаб Бренда','Ядро EvaLine','Головной офис','Руководящий центр EvaLine. Полный цикл производства EVA от листов до готовой продукции — управляет всеми направлениями бизнеса и формирует стратегию.'] },
+            2: { en: ['Production','EVA Manufacturing','Sheets','EVA foam production: extrusion & cross-linking of ethylene-vinyl-acetate sheets (from 2mm), custom figure cutting, large color range.'],
+                 uk: ['Виробництво','Виробництво EVA','Листи','Виробництво EVA-піни: екструзія та зшивка листів етиленвінілацетату (від 2 мм), фігурна різка, широка кольорова гама.'],
+                 ru: ['Производство','Производство EVA','Листы','Производство EVA-пены: экструзия и сшивка листов этиленвинилацетата (от 2 мм), фигурная резка, широкая цветовая гамма.'] },
+            3: { en: ['Supply & Compliance','Procurement','Quality','Raw-material procurement, stock control, certifications (ISO, UNIC integrity) and compliance with EU EVA regulations.'],
+                 uk: ['Постачання й Відповідність','Закупівлі','Якість','Закупівля сировини, контроль складів, сертифікати (ISO, мережа UNIC) та відповідність європейським регулюванням щодо EVA.'],
+                 ru: ['Снабжение и Соответствие','Закупки','Качество','Закупка сырья, контроль складов, сертификаты (ISO, сеть UNIC) и соответствие европейским регуляциям по EVA.'] },
+            4: { en: ['B2B Sales','Wholesale','Production Orders','Wholesale supplies for manufacturers: EVA sheets for auto mats, shoe soles, laminate underlay, livestock mats, foamiran wholesale.'],
+                 uk: ['B2B Продажі','Опт','Виробничі замовлення','Оптові поставки для виробників: EVA-листи для автокилимків, підошви, підложка під ламінат, мати для тваринництва, оптовий фоаміран.'],
+                 ru: ['B2B Продажи','Опт','Производственные заказы','Оптовые поставки для производителей: EVA-листы для автоковриков, подошвы, подложка под ламинат, маты для животноводства, оптовый фоамиран.'] },
+            5: { en: ['B2C Retail','Consumer','Online Shop','Retail range: foamiran, hair curlers, tourist seat pads, doormats, swimming mats, animal pads, children products.'],
+                 uk: ['B2C Роздріб','Споживач','Інтернет-магазин','Роздрібний асортимент: фоаміран, бігуді, туристичні сидіння, придверні килимки, мати для плавання, килимки для тварин, товари для дітей.'],
+                 ru: ['B2C Розница','Потребитель','Интернет-магазин','Розничный ассортимент: фоамиран, бигуди, туристические сидушки, придверные коврики, маты для плавания, коврики для животных, товары для детей.'] },
+            6: { en: ['Sports Line','Sports Flooring','Tatami & Mats','Sports floor coverings: tatami, sports mats for martial arts, gym mats, playground and children sport surfaces.'],
+                 uk: ['Спорт-Напрям','Спортивні покриття','Татамі та мати','Спортивні покриття: татамі, мати для єдиноборств, мати для спортзалів, покриття для ігрових та дитячих майданчиків.'],
+                 ru: ['Спорт-Направление','Спортивные покрытия','Татами и маты','Спортивные покрытия: татами, маты для единоборств, маты для спортзалов, покрытия для игровых и детских площадок.'] },
+            7: { en: ['Auto Line','Car Mats','EVA Sheets','EVA sheets specifically engineered for car floor mats — all-season, washable, durable; plus laminate underlay and separation bars.'],
+                 uk: ['Авто-Напрям','Автокилимки','EVA-листи','EVA-листи для автокилимків — всесезонні, миються, зносостійкі; а також підложка під ламінат та сепараційні бруси.'],
+                 ru: ['Авто-Направление','Автоковрики','EVA-листы','EVA-листы для автоковриков — всесезонные, моющиеся, износостойкие; а также подложка под ламинат и сепарационные брусья.'] },
+            8: { en: ['Agro Line','Livestock','Animal Mats','Farm offering: EVA mats "Buryonka" for cattle (KRH), horse pads, plus 25% state compensation support for farmers.'],
+                 uk: ['Агро-Напрям','Тваринництво','Мати для ВРХ','Фермерський напрям: EVA-мати «Бурьонка» для великої рогатої худоби, підстилки для коней, підтримка 25% держкомпенсації фермерам.'],
+                 ru: ['Агро-Направление','Животноводство','Маты для КРС','Фермерское направление: EVA-маты «Бурёнка» для крупного рогатого скота, подстилки для лошадей, поддержка 25% гос.компенсации фермерам.'] },
+            9: { en: ['Shoe Line','Footwear','Soles & Insoles','Footwear components from EVA: soles, shoe inserts, pedicure separators — lightweight (5x lighter than rubber), hygienic.'],
+                 uk: ['Взуттєвий Напрям','Взуття','Підошви та устілки','Взуттєві комплектуючі з EVA: підошви, устілки, розпірки для педикюру — легкі (у 5 разів легші за гуму), гігієнічні.'],
+                 ru: ['Обувное Направление','Обувь','Подошвы и стельки','Обувные комплектующие из EVA: подошвы, стельки, разделители для педикюра — легкие (в 5 раз легче резины), гигиеничные.'] },
+            10:{ en: ['Client Service','Support','Private Label','Customer care: consultations, Private Label / white-label production, custom orders, partner search and logistics across UA/PL/DE/RO markets.'],
+                 uk: ['Клієнтський Сервіс','Підтримка','Приватні марки','Клієнтська підтримка: консультації, виробництво під Private Label / white-label, індивідуальні замовлення, пошук партнерів та логістика на ринках UA/PL/DE/RO.'],
+                 ru: ['Клиентский Сервис','Поддержка','Частные марки','Клиентская поддержка: консультации, производство под Private Label / white-label, индивидуальные заказы, поиск партнеров и логистика на рынках UA/PL/DE/RO.'] }
         }
     };
 
     const AGENTS = [
-        { id: 1, key: 'MONAD',  row: 1, lvl: 'L-I Monad' },
-        { id: 2, key: 'ARCH',   row: 2, lvl: 'L-II Dyad' },
-        { id: 3, key: 'SYNTH',  row: 2, lvl: 'L-II Dyad' },
-        { id: 4, key: 'EXEC',   row: 3, lvl: 'L-III Triad' },
-        { id: 5, key: 'RISK',   row: 3, lvl: 'L-III Triad' },
-        { id: 6, key: 'QUAL',   row: 3, lvl: 'L-III Triad' },
-        { id: 7, key: 'MKT',    row: 4, lvl: 'L-IV Tetrad' },
-        { id: 8, key: 'OPS',    row: 4, lvl: 'L-IV Tetrad' },
-        { id: 9, key: 'FIN',    row: 4, lvl: 'L-IV Tetrad' },
-        { id: 10,key: 'SYNERGY',row: 4, lvl: 'L-IV Tetrad' }
+        { id: 1, key: 'HQ',     row: 1, lvl: 'L-I Core' },
+        { id: 2, key: 'PROD',   row: 2, lvl: 'L-II Manufacture' },
+        { id: 3, key: 'SUPPLY', row: 2, lvl: 'L-II Supply' },
+        { id: 4, key: 'B2B',    row: 3, lvl: 'L-III B2B' },
+        { id: 5, key: 'B2C',    row: 3, lvl: 'L-III B2C' },
+        { id: 6, key: 'SPORT',  row: 3, lvl: 'L-III Sports' },
+        { id: 7, key: 'AUTO',   row: 4, lvl: 'L-IV Auto' },
+        { id: 8, key: 'AGRO',   row: 4, lvl: 'L-IV Agro' },
+        { id: 9, key: 'SHOE',   row: 4, lvl: 'L-IV Shoe' },
+        { id: 10,key: 'SRVC',   row: 4, lvl: 'L-IV Service' }
     ];
 
     // Dataflow topology: parent -> children (directed from apex downward)
@@ -419,9 +422,9 @@
     // ---- i18n core ----
     let currentLang = 'en';
     const I18N = {
-        en: { brand:'Nova Line Network', subtitle:'Interactive Tetraktys Modules Grid', simulate:'▶ Simulate Flow', random:'⚡ Random Load', log:'Log', theme:'Theme', net:'NET', copyright:'Nova Line Network © 2026', footerNote:'10 Agents · Live Dataflow Simulation', simStart:'== SIMULATION START ==', simComplete:'== SIMULATION COMPLETE ==', simStop:'== SIMULATION STOPPED ==', detailRole:'Role', detailLevel:'Level', detailStatus:'Status', detailOnline:'ONLINE', detailProcessing:'PROCESSING', detailOffline:'OFFLINE', actPing:'Ping', actPulse:'Pulse', actToggle:'Toggle', logTitle:'Event Stream', pong:'pong', down:'OFFLINE', up:'ONLINE' },
-        uk: { brand:'Nova Line Network', subtitle:'Інтерактивна Тетрактис Модульна Сітка', simulate:'▶ Запуск потоку', random:'⚡ Випадкове навантаження', log:'Журнал', theme:'Тема', net:'МЕРЕЖА', copyright:'Nova Line Network © 2026', footerNote:'10 Агентів · Жива симуляція потоків даних', simStart:'== ПОЧАТОК СИМУЛЯЦІЇ ==', simComplete:'== СИМУЛЯЦІЮ ЗАВЕРШЕНО ==', simStop:'== СИМУЛЯЦІЮ ЗУПИНЕНО ==', detailRole:'Роль', detailLevel:'Рівень', detailStatus:'Статус', detailOnline:'ОНЛАЙН', detailProcessing:'ОБРОБКА', detailOffline:'ОФЛАЙН', actPing:'Пінг', actPulse:'Пульс', actToggle:'Перемкнути', logTitle:'Потік подій', pong:'понг', down:'ОФЛАЙН', up:'ОНЛАЙН' },
-        ru: { brand:'Nova Line Network', subtitle:'Интерактивная Тетрактис Модульная Сетка', simulate:'▶ Запуск потока', random:'⚡ Случайная нагрузка', log:'Журнал', theme:'Тема', net:'СЕТЬ', copyright:'Nova Line Network © 2026', footerNote:'10 Агентов · Живая симуляция потоков данных', simStart:'== НАЧАЛО СИМУЛЯЦИИ ==', simComplete:'== СИМУЛЯЦИЯ ЗАВЕРШЕНА ==', simStop:'== СИМУЛЯЦИЯ ОСТАНОВЛЕНА ==', detailRole:'Роль', detailLevel:'Уровень', detailStatus:'Статус', detailOnline:'ОНЛАЙН', detailProcessing:'ОБРАБОТКА', detailOffline:'ОФЛАЙН', actPing:'Пинг', actPulse:'Пульс', actToggle:'Переключить', logTitle:'Поток событий', pong:'понг', down:'ОФЛАЙН', up:'ОНЛАЙН' }
+        en: { brand:'EvaLine Network', subtitle:'10 Business Agents · EVA Manufacturer Topology', simulate:'▶ Simulate Flow', random:'⚡ Random Load', log:'Log', theme:'Theme', net:'NET', copyright:'EvaLine Network © 2026', footerNote:'10 Business Agents · EVA Production Lines', simStart:'== FLOW START ==', simComplete:'== FLOW COMPLETE ==', simStop:'== FLOW STOPPED ==', detailRole:'Role', detailLevel:'Level', detailStatus:'Status', detailOnline:'ONLINE', detailProcessing:'PROCESSING', detailOffline:'OFFLINE', actPing:'Ping', actPulse:'Pulse', actToggle:'Toggle', logTitle:'Event Stream', pong:'pong', down:'OFFLINE', up:'ONLINE' },
+        uk: { brand:'EvaLine Мережа', subtitle:'10 Бізнес-Агентів · Топологія виробника EVA', simulate:'▶ Запуск потоку', random:'⚡ Випадкове навантаження', log:'Журнал', theme:'Тема', net:'МЕРЕЖА', copyright:'EvaLine Мережа © 2026', footerNote:'10 Бізнес-Агентів · Виробничі лінії EVA', simStart:'== ПОЧАТОК ПОТОКУ ==', simComplete:'== ПОТІК ЗАВЕРШЕНО ==', simStop:'== ПОТІК ЗУПИНЕНО ==', detailRole:'Роль', detailLevel:'Рівень', detailStatus:'Статус', detailOnline:'ОНЛАЙН', detailProcessing:'ОБРОБКА', detailOffline:'ОФЛАЙН', actPing:'Пінг', actPulse:'Пульс', actToggle:'Перемкнути', logTitle:'Потік подій', pong:'понг', down:'ОФЛАЙН', up:'ОНЛАЙН' },
+        ru: { brand:'EvaLine Сеть', subtitle:'10 Бизнес-Агентов · Топология производителя EVA', simulate:'▶ Запуск потока', random:'⚡ Случайная нагрузка', log:'Журнал', theme:'Тема', net:'СЕТЬ', copyright:'EvaLine Сеть © 2026', footerNote:'10 Бизнес-Агентов · Производственные линии EVA', simStart:'== НАЧАЛО ПОТОКА ==', simComplete:'== ПОТОК ЗАВЕРШЕН ==', simStop:'== ПОТОК ОСТАНОВЛЕН ==', detailRole:'Роль', detailLevel:'Уровень', detailStatus:'Статус', detailOnline:'ОНЛАЙН', detailProcessing:'ОБРАБОТКА', detailOffline:'ОФЛАЙН', actPing:'Пинг', actPulse:'Пульс', actToggle:'Переключить', logTitle:'Поток событий', pong:'понг', down:'ОФЛАЙН', up:'ОНЛАЙН' }
     };
 
     function applyLang(lang) {
