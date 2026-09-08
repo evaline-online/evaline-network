@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Nova Line Network — Square Tetraktys Topology</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Dark Theme */
+            --bg: #050507;
+            --fg: #f4f4f5;
+            --muted: #8e8e93;
+            --border: #222226;
+            --border-active: #ffffff;
+            --card-bg: #0d0d11;
+            --card-hover: #17171d;
+            --grid-line: rgba(255, 255, 255, 0.04);
+            --badge-bg: #1c1c22;
+            --badge-fg: #ffffff;
+            --accent-glow: rgba(255, 255, 255, 0.15);
+        }
+
+        #theme-toggle:checked ~ .app {
+            /* Light Theme */
+            --bg: #f5f5f7;
+            --fg: #0a0a0c;
+            --muted: #6e6e73;
+            --border: #d2d2d7;
+            --border-active: #000000;
+            --card-bg: #ffffff;
+            --card-hover: #eaeaea;
+            --grid-line: rgba(0, 0, 0, 0.04);
+            --badge-bg: #e5e5ea;
+            --badge-fg: #000000;
+            --accent-glow: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto Mono', monospace;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: var(--bg);
+            color: var(--fg);
+        }
+
+        #theme-toggle {
+            display: none;
+        }
+
+        .app {
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 24px 24px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            padding: 12px;
+            gap: 8px;
+        }
+
+        /* Module 1: Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .brand-square {
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--fg);
+        }
+
+        .header-subtitle {
+            font-size: 0.65rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .theme-btn {
+            cursor: pointer;
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--bg);
+            color: var(--fg);
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .theme-btn:hover {
+            border-color: var(--border-active);
+            background: var(--card-hover);
+        }
+
+        .theme-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--fg);
+        }
+
+        /* Module 2: Top 10-Equal Modular Grid Bar */
+        .grid-10-bar {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+        }
+
+        .grid-10-cell {
+            padding: 6px 2px;
+            text-align: center;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--muted);
+            border-right: 1px solid var(--border);
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .grid-10-cell:last-child {
+            border-right: none;
+        }
+
+        .grid-10-cell:hover {
+            background: var(--card-hover);
+            color: var(--fg);
+        }
+
+        /* Module 3: Square Pyramid Viewport Container */
+        main {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            height: 100%;
+            min-height: 0;
+            gap: 6px;
+        }
+
+        .tetraktys-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* Perfect Square Node Cards */
+        .square-node {
+            aspect-ratio: 1 / 1;
+            height: 100%;
+            max-height: 145px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .square-node:hover {
+            border-color: var(--border-active);
+            background: var(--card-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .node-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            border-bottom: 1px dashed var(--border);
+            padding-bottom: 3px;
+        }
+
+        .node-id {
+            font-size: 0.6rem;
+            font-weight: 700;
+            background: var(--badge-bg);
+            color: var(--badge-fg);
+            padding: 1px 4px;
+        }
+
+        .node-lvl {
+            font-size: 0.55rem;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .node-center {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .node-name {
+            font-size: clamp(0.65rem, 0.95vw, 0.75rem);
+            font-weight: 700;
+            color: var(--fg);
+            line-height: 1.15;
+            text-transform: uppercase;
+        }
+
+        .node-tag {
+            font-size: 0.55rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .node-bottom {
+            width: 100%;
+            border-top: 1px dashed var(--border);
+            padding-top: 3px;
+            font-size: 0.55rem;
+            color: var(--fg);
+            opacity: 0.8;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        /* Row 1 Apex Highlight */
+        .row-1 .square-node {
+            border-width: 2px;
+            border-color: var(--border-active);
+            max-height: 155px;
+        }
+
+        /* Module 4: Footer Bar */
+        footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 16px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            font-size: 0.6rem;
+            color: var(--muted);
+        }
+
+        /* Responsive adjustments for smaller windows */
+        @media (max-height: 600px) {
+            .square-node {
+                padding: 4px;
+            }
+            .node-bottom {
+                display: none;
+            }
+        }
+
+        @media (max-width: 700px) {
+            html, body {
+                overflow: auto;
+            }
+            .app {
+                height: auto;
+                min-height: 100vh;
+            }
+            .tetraktys-row {
+                flex-wrap: wrap;
+            }
+            .square-node {
+                max-height: none;
+                width: 45%;
+            }
+            .grid-10-bar {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pure CSS Theme Toggle Checkbox -->
+    <input type="checkbox" id="theme-toggle">
+
+    <div class="app">
+        <!-- Module 1: Header -->
+        <header>
+            <div class="brand">
+                <div class="brand-square"></div>
+                <span>Nova Line Network</span>
+            </div>
+            <div class="header-subtitle">Tetraktys Square Modules Grid</div>
+            <label for="theme-toggle" class="theme-btn">
+                <span class="theme-indicator"></span>
+                <span>Theme</span>
+            </label>
+        </header>
+
+        <!-- Module 2: Top 10-Equal Modular Grid Bar -->
+        <div class="grid-10-bar">
+            <div class="grid-10-cell">01. MONAD</div>
+            <div class="grid-10-cell">02. ARCH</div>
+            <div class="grid-10-cell">03. SYNTH</div>
+            <div class="grid-10-cell">04. EXEC</div>
+            <div class="grid-10-cell">05. RISK</div>
+            <div class="grid-10-cell">06. QUAL</div>
+            <div class="grid-10-cell">07. MKT</div>
+            <div class="grid-10-cell">08. OPS</div>
+            <div class="grid-10-cell">09. FIN</div>
+            <div class="grid-10-cell">10. SYNERGY</div>
+        </div>
+
+        <!-- Module 3: Square Pyramid Viewport Grid -->
+        <main>
+            <!-- Row 1: 1 Square Node -->
+            <div class="tetraktys-row row-1">
+                <div class="square-node">
+                    <div class="node-top">
+                        <span class="node-id">01</span>
+                        <span class="node-lvl">L-I Monad</span>
+                    </div>
+                    <div class="node-center">
+                        <div class="node-name">Monad Prime</div>
+                        <div class="node-tag">Origin Node</div>
+                    </div>
+                    <div class="node-bottom">Orchestrator</div>
+                </div>
+            </div>
+
+            <!-- Row 2: 2 Square Nodes -->
+            <div class="tetraktys-row row-2">
+                <div class="square-node">
+                    <div class="node-top">
+                        <span class="node-id">02</span>
+                        <span class="node-lvl">L-II Dyad</span>
+                    </div>
+                    <div class="node-center">
+                        <div class="node-name">Strategic Architect</div>
+                        <div class="node-tag">Strategy LLM</div>
+                    </div>
+                    <div class="node-bottom">Blueprint</div>
+                </div>
+                <div class="square-node">
+                    <div class="node-top">
+                        <span class="node-id">03</span>
+                        <span class="node-lvl">L-II Dyad</span>
+                    </div>
+                    <div class="node-center">
+                        <div class="node-name">Analytical Synthesizer</div>
+                        <div class="node-tag">Analytics LLM</div>
+                    </div>
+                    <div class="node-bottom">Data Feeds</div>
+                </div>
+            </div>
+
+            <!-- Row 3: 3 Square Nodes -->
+            <div class="tetraktys-row row-3">
+                <div class="square-node">
+                    <div class="node-top">
+                        <span class="node-id">04</span>
+                        <span class="node-lvl">L-III Triad</span>
+                    </div>
+                    <div class="node-center">
+                        <div class="node-name">Executive Decision</div>
+                        <div class="node-tag">Decision LLM</div>
+                    </div>
+                    <div class="node-bottom">Consensus</div>
+                </div>
+                <div class="square-node">
+                    <div class="node-top">
+                        <span class="node-id">05</span>
+                        <span class="node-lvl">L-III Triad</span>
+                    </div>
+                    <div class="node-center">
+                        <div class="node-name">Risk &amp; Compliance</div>
+                        <div class="node-tag">Risk LLM</div>
+                    </div>
+                    <div class="node-bottom">Audit &amp; Safety</div>
+                </div>
+                <div class="square-node">
+                    <div class="node-top">
+                        <span class="node-id">06</span>
+                        <span class="node-lvl">L-III Triad</span>
+                    </div>
+                    <div class="node-center">
+                        <div class="node-name">Quality &amp; Validation</div>
+                        <div class="node-tag">QA LLM</div>
+                    </div>
+                    <div class="node-bottom">Verification</div>
+                </div>
+            </div>
+
+            <!-- Row 4: 4 Square Nodes -->
+            <div class="tetraktys-row row-4">
+                <div class="square-node">
+                    <div class="node-top">
+                        <span class="node-id">07</span>
+                        <span class="node-lvl">L-IV Tetrad</span>
+                    </div>
+                    <div class="node-center">
+                        <div class="node-name">Market Intel</div>
+                        <div class="node-tag">Market LLM</div>
+                    </div>
+                    <div class="node-bottom">Prediction</div>
+                </div>
+                <div class="square-node">
+                    <div class="node-top">
+                        <span class="node-id">08</span>
+                        <span class="node-lvl">L-IV Tetrad</span>
+                    </div>
+                    <div class="node-center">
+                        <div class="node-name">Operational Ops</div>
+                        <div class="node-tag">Ops LLM</div>
+                    </div>
+                    <div class="node-bottom">Pipelines</div>
+                </div>
+                <div class="square-node">
+                    <div class="node-top">
+                        <span class="node-id">09</span>
+                        <span class="node-lvl">L-IV Tetrad</span>
+                    </div>
+                    <div class="node-center">
+                        <div class="node-name">Financial Model</div>
+                        <div class="node-tag">Finance LLM</div>
+                    </div>
+                    <div class="node-bottom">Yield &amp; Fiscal</div>
+                </div>
+                <div class="square-node">
+                    <div class="node-top">
+                        <span class="node-id">10</span>
+                        <span class="node-lvl">L-IV Tetrad</span>
+                    </div>
+                    <div class="node-center">
+                        <div class="node-name">Client Synergy</div>
+                        <div class="node-tag">Client LLM</div>
+                    </div>
+                    <div class="node-bottom">User Interface</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Module 4: Footer -->
+        <footer>
+            <div>Nova Line Network &copy; 2026</div>
+            <div>No-Cache Monochromatic Tetraktys (Pure HTML/CSS)</div>
+        </footer>
+    </div>
+
+</body>
+</html>
