@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Markdown ↔ HTML Converter</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/lib/marked.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .header-bar {
+      background: #1a1a2e;
+      border-bottom: 2px solid #00ff66;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+    .header-bar .logo { color: #00ff66; font-weight: bold; font-size: 16px; }
+    .header-bar .badge {
+      background: #162134;
+      border: 1px solid #0f3460;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      color: #e94560;
+    }
+    .tabs {
+      display: flex;
+      background: #16162e;
+      border-bottom: 1px solid #333;
+      overflow: hidden;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      background: transparent;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active { color: #00ff66; border-bottom-color: #00ff66; }
+    .tab-btn:hover { background: #1a1a2e; }
+    .container { display: flex; height: calc(100vh - 76px); }
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-header {
+      background: #162134;
+      border-bottom: 1px solid #333;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #00ddff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .panel-header .actions { display: flex; gap: 8px; }
+    .btn {
+      padding: 4px 12px;
+      background: #0f3460;
+      border: 1px solid #0f3460;
+      color: #e0e0e0;
+      font-size: 11px;
+      cursor: pointer;
+      border-radius: 3px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #165276; border-color: #165276; }
+    .btn.primary { background: #00aa44; border-color: #00aa44; color: #050505; }
+    .btn.primary:hover { background: #00c851; }
+    .editor-wrapper { flex: 1; display: flex; overflow: hidden; }
+    #md-editor, #html-output {
+      width: 100%;
+      height: 100%;
+      border: none;
+      resize: none;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+      padding: 16px;
+      tab-size: 2;
+      outline: none;
+    }
+    #md-editor { border-right: 2px solid #333; }
+    #html-output { border-left: 2px solid #333; }
+    #html-output iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+    .live-badge {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: #00ff66;
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+    .status-line {
+      height: 20px;
+      background: #162134;
+      border-top: 1px solid #333;
+      padding: 0 12px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      font-size: 11px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <span class="logo">▶ EVALINE NETWORK</span>
+    <span>/</span>
+    <span style="color:#00ddff">Live Markdown ↔ HTML Converter</span>
+    <span class="badge">EDGE-01</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('md-to-html')">Markdown → HTML</button>
+    <button class="tab-btn" onclick="switchTab('html-to-md')">HTML → Markdown</button>
+  </div>
+
+  <div class="container">
+    <!-- === MD TO HTML === -->
+    <div class="panel" id="panel-md-to-html">
+      <div class="panel-header">
+        <span>Markdown Input <span class="live-badge"></span><span style="color:#557755">LIVE</span></span>
+        <div class="actions">
+          <button class="btn" onclick="clearEditor('md')">Clear</button>
+          <button class="btn" onclick="copyOutput('html')">Copy HTML</button>
+          <button class="btn primary" onclick="downloadOutput('html')">Download HTML</button>
+        </div>
+      </div>
+      <div class="editor-wrapper">
+        <textarea id="md-editor" placeholder="# Введите Markdown здесь...
+
+## Заголовок H2
+
+**Жирный** текст, *курсив*, `код` и [ссылка](https://example.com).
+
+- Пункт 1
+- Пункт 2
+
+```js
+function hello() {
+  console.log('Привет, мир!');
+}
+```
+
+| Столбец 1 | Столбец 2 |
+|-----------|-----------|
+| A         | B         |">## Пример Markdown
+
+**Тут будет ваш Markdown → HTML конвертер в реальном времени.**
+
+_Правила:_
+- Введите Markdown слева
+- HTML появляется справа мгновенно
+- Поддерживается: заголовки, списки, код, таблицы, ссылки</textarea>
+        <iframe id="html-output"></iframe>
+      </div>
+    </div>
+
+    <!-- === HTML TO MD === -->
+    <div class="panel" id="panel-html-to-md" style="display:none;">
+      <div class="panel-header">
+        <span>HTML Input <span class="live-badge" style="background:#ffbb00;"></span><span style="color:#557755">LIVE</span></span>
+        <div class="actions">
+          <button class="btn" onclick="clearEditor('html')">Clear</button>
+          <button class="btn" onclick="copyOutput('md')">Copy Markdown</button>
+          <button class="btn primary" onclick="downloadOutput('md')">Download MD</button>
+        </div>
+      </div>
+      <div class="editor-wrapper">
+        <textarea id="html-editor" placeholder="<h1>Введите HTML здесь...</h1>
+
+<p><strong>Жирный</strong> текст, <em>курсив</em>, <code>код</code>.</p>
+
+<ul>
+  <li>Пункт 1</li>
+  <li>Пункт 2</li>
+</ul>"><p>Введите HTML слева, а справа получите Markdown в реальном времени.</p></textarea>
+        <iframe id="md-output"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-line">
+    <span>Chars: <span id="char-count">0</span></span>
+    <span>Words: <span id="word-count">0</span></span>
+    <span>Lines: <span id="line-count">0</span></span>
+    <span id="current-mode" style="color:#00aa44">→ Markdown to HTML</span>
+  </div>
+
+  <script>
+    // === CONFIG ===
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+      highlight: function(code, lang) {
+        if (typeof hljs !== 'undefined' && hljs.getLanguage(lang)) {
+          return hljs.highlight(code, { language: lang }).value;
+        }
+        return code;
+      }
+    });
+    marked.use({
+      langPrefix: 'hljs language-',
+    });
+
+    const turndownService = new TurndownService({
+      headingStyle: 'atx',
+      codeBlockStyle: 'fenced',
+      emDelimiter: '_'
+    });
+    turndownService.addRule('tables', {
+      filter: ['table'],
+      replacement: function(content, node) {
+        return '\n' + content + '\n';
+      }
+    });
+
+    // === LIVE CONVERTER ===
+    const mdEditor = document.getElementById('md-editor');
+    const htmlOutput = document.getElementById('html-output');
+    const htmlEditor = document.getElementById('html-editor');
+    const mdOutput = document.getElementById('md-output');
+    const charCount = document.getElementById('char-count');
+    const wordCount = document.getElementById('word-count');
+    const lineCount = document.getElementById('line-count');
+    const currentMode = document.getElementById('current-mode');
+
+    function updateStats(text) {
+      charCount.textContent = text.length;
+      wordCount.textContent = text.trim() ? text.trim().split(/\s+/).length : 0;
+      lineCount.textContent = text.split('\n').length;
+    }
+
+    function renderHTML() {
+      const mdText = mdEditor.value;
+      try {
+        const html = marked.parse(mdText);
+        htmlOutput.srcdoc = `
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f8f8f8; color: #1a1a1a; line-height: 1.6; }
+  h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+  h2 { color: #34495e; border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; }
+  h3 { color: #2c3e50; }
+  code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+  pre { background: #2c3e50; color: #ecf0f1; padding: 16px; border-radius: 5px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+  th, td { border: 1px solid #bdc3c7; padding: 8px 12px; text-align: left; }
+  th { background: #34495e; color: white; }
+  tr:nth-child(even) { background: #f2f2f2; }
+  blockquote { border-left: 4px solid #3498db; margin: 10px 0; padding: 10px 20px; background: #ecf0f1; }
+  ul, ol { margin-left: 20px; }
+  a { color: #3498db; }
+</style></head>
+<body>${html}</body></html>`;
+      } catch(e) {
+        htmlOutput.srcdoc = '<html><body style="padding:20px"><h2 style="color:red">Ошибка парсинга:</h2><pre>' + e.message + '</pre></body></html>';
+      }
+      updateStats(mdText);
+    }
+
+    function renderMD() {
+      const htmlText = htmlEditor.value;
+      try {
+        const md = turndownService.turndown(htmlText);
+        mdOutput.srcdoc = `
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  body { font-family: 'JetBrains Mono', monospace; margin: 0; padding: 20px; background: #0a0a0a; color: #e0e0e0; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+  h1 { color: #00ff66; } h2 { color: #00ddff; } h3 { color: #ffbb00; }
+  code { background: #1a1a2e; padding: 2px 6px; border-radius: 3px; }
+  pre { background: #162134; padding: 16px; border-radius: 5px; overflow-x: auto; }
+  pre code { background: none; }
+</style></head>
+<body>${md}</body></html>`;
+      } catch(e) {
+        mdOutput.srcdoc = '<html><body style="padding:20px"><h2 style="color:red">Ошибка конвертации:</h2><pre>' + e.message + '</pre></body></html>';
+      }
+      updateStats(htmlText);
+    }
+
+    // === EVENT LISTENERS ===
+    mdEditor.addEventListener('input', renderHTML);
+    htmlEditor.addEventListener('input', renderMD);
+
+    // === TAB SWITCH ===
+    function switchTab(tab) {
+      document.getElementById('panel-md-to-html').style.display = tab === 'md-to-html' ? 'flex' : 'none';
+      document.getElementById('panel-html-to-md').style.display = tab === 'html-to-md' ? 'flex' : 'none';
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      currentMode.textContent = tab === 'md-to-html' ? '→ Markdown to HTML' : '→ HTML to Markdown';
+      if (tab === 'md-to-html') renderHTML(); else renderMD();
+    }
+
+    // === ACTIONS ===
+    function clearEditor(which) {
+      if (which === 'md') { mdEditor.value = ''; renderHTML(); }
+      else { htmlEditor.value = ''; renderMD(); }
+    }
+
+    async function copyOutput(which) {
+      if (which === 'html') {
+        const html = marked.parse(mdEditor.value);
+        await navigator.clipboard.writeText(html);
+        showToast('HTML скопирован в буфер!');
+      } else {
+        const md = turndownService.turndown(htmlEditor.value);
+        await navigator.clipboard.writeText(md);
+        showToast('Markdown скопирован в буфер!');
+      }
+    }
+
+    function downloadOutput(which) {
+      const link = document.createElement('a');
+      if (which === 'html') {
+        const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' + document.querySelector('style').textContent + '</style></head><body>' + marked.parse(mdEditor.value) + '</body></html>';
+        link.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+        link.download = 'output.html';
+      } else {
+        const md = turndownService.turndown(htmlEditor.value);
+        link.href = 'data:text/markdown;charset=utf-8,' + encodeURIComponent(md);
+        link.download = 'output.md';
+      }
+      link.click();
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      Object.assign(toast.style, {
+        position: 'fixed', bottom: '20px', right: '20px',
+        background: '#00aa44', color: '#050505', padding: '10px 20px',
+        borderRadius: '5px', fontSize: '13px', fontWeight: 'bold',
+        zIndex: 9999, animation: 'fadein 0.3s, fadeout 0.3s 2.7s forwards'
+      });
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // === INIT ===
+    renderHTML();
+    updateStats(mdEditor.value);
+  </script>
+</body>
+</html>

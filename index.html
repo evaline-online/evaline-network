@@ -7,6 +7,14 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>EVALINE.NETWORK // LIVE ARCHITECTURE, 94 LLMs CATALOG, ACCOUNTING & AGENT CONSILIUM</title>
+  <meta name="description" content="EVALINE.NETWORK — Live dual-node cluster telemetry, 94 LLMs catalog, WireGuard mesh, infrastructure accounting and multi-agent AI consilium.">
+  <meta name="theme-color" content="#050608">
+  <meta name="color-scheme" content="dark light">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="EVALINE.NETWORK // LIVE ARCHITECTURE, 94 LLMs CATALOG & CONSILIUM">
+  <meta property="og:description" content="Live dual-node cluster telemetry, 94 LLMs catalog, WireGuard backbone mesh visualizer, infrastructure financial accounting & AI Agent Consilium.">
+  <meta property="og:url" content="https://evaline.network">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230e1118' stroke='%2300e5ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%2300e676'/%3E%3C/svg%3E">
   
   <!-- COMPLETE ROBOTO SUPERFAMILY: Roboto, Roboto Mono, Roboto Condensed, Roboto Slab, Roboto Serif, Roboto Flex -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,6 +22,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Roboto+Flex:wght@100..1000&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto+Serif:ital,opsz,wght@0,8..144,100..900;1,8..144,100..900&family=Roboto+Slab:wght@100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
 
   <style>
+    @font-face {
+      font-family: 'Roboto';
+      src: url('/fonts/Roboto-Variable.woff2') format('woff2');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Roboto';
+      src: url('/fonts/Roboto-Italic-Variable.woff2') format('woff2');
+      font-weight: 100 900;
+      font-style: italic;
+      font-display: swap;
+    }
+
     :root {
       /* FONT FAMILY VARIABLES - ALL ROBOTO STYLES */
       --font-roboto: 'Roboto', sans-serif;
@@ -76,6 +99,95 @@
       padding-bottom: 60px;
     }
 
+    /* CUSTOM CYBER SCROLLBAR */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--surface-hover);
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-cyan);
+    }
+
+    /* ACCESSIBILITY & INTERACTION */
+    :focus-visible {
+      outline: 2px solid var(--accent-cyan);
+      outline-offset: 2px;
+    }
+    .copyable {
+      cursor: pointer;
+      position: relative;
+      transition: color 0.15s ease, text-shadow 0.15s ease;
+    }
+    .copyable:hover {
+      color: var(--accent-cyan) !important;
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+    }
+    .copy-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--surface);
+      color: var(--accent-cyan);
+      border: 1px solid var(--border-cyan);
+      box-shadow: 0 4px 20px rgba(0, 229, 255, 0.25);
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 1000;
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .copy-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* BACK TO TOP FLOATING BUTTON */
+    .btn-back-to-top {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border-cyan);
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.85);
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      font-size: 14px;
+    }
+    .btn-back-to-top.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+    .btn-back-to-top:hover {
+      background: var(--accent-cyan);
+      color: #000;
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.5);
+    }
+
     /* TRILINGUAL INSTANT SWITCHING RULES */
     html[data-lang="en"] .t-en { display: inline !important; }
     html[data-lang="en"] .t-uk, html[data-lang="en"] .t-ru { display: none !important; }
@@ -107,15 +219,19 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 64px;
-      gap: 16px;
+      min-height: 64px;
+      height: auto;
+      gap: 12px;
+      padding: 8px 0;
+      flex-wrap: wrap;
     }
     .brand-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       text-decoration: none;
       color: inherit;
+      flex-wrap: wrap;
     }
     .brand-logo {
       font-family: var(--font-mono);
@@ -152,7 +268,8 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     /* LANGUAGE BUTTONS */
@@ -163,18 +280,22 @@
       border-radius: 6px;
       padding: 2px;
       gap: 2px;
+      flex: 1 1 auto;
     }
     .lang-btn {
       background: transparent;
       border: none;
       color: var(--fg-dim);
-      padding: 4px 10px;
+      padding: 4px 8px;
       font-family: var(--font-mono);
       font-size: 11px;
       font-weight: 600;
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.15s ease;
+      flex: 1 1 auto;
+      min-width: 0;
+      text-align: center;
     }
     .lang-btn:hover {
       color: var(--fg);
@@ -191,16 +312,20 @@
       background: var(--surface-2);
       border: 1px solid var(--border);
       color: var(--fg);
-      padding: 6px 12px;
+      padding: 6px 10px;
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: 11px;
       border-radius: 6px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 5px;
       text-decoration: none;
       transition: all 0.2s;
+      flex: 1 1 auto;
+      min-width: 0;
+      white-space: nowrap;
     }
     .btn-ctrl:hover {
       background: var(--surface-hover);
@@ -237,7 +362,7 @@
     .domain-links {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 8px 14px;
       flex-wrap: wrap;
     }
     .domain-links a {
@@ -247,6 +372,8 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      white-space: normal;
+      word-break: break-word;
     }
     .domain-links a:hover { color: var(--accent-cyan); }
     .domain-links a.active {
@@ -258,12 +385,59 @@
       align-items: center;
       gap: 6px;
       font-size: 11px;
-      padding: 2px 8px;
+      padding: 3px 8px;
       border-radius: 12px;
       background: rgba(0, 230, 118, 0.12);
       color: var(--accent-green);
       border: 1px solid var(--border-green);
       font-family: var(--font-mono);
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.3;
+      max-width: 100%;
+    }
+
+    /* SINGLE-VIEWPORT TABS */
+    .vp-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin: 16px 0 24px 0;
+      padding: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .vp-tab {
+      flex: 1 1 auto;
+      min-width: 70px;
+      max-width: 120px;
+      text-align: center;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--fg-dim);
+      padding: 6px 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .vp-tab:hover {
+      color: var(--fg);
+      background: var(--surface-hover);
+      border-color: var(--border-bright);
+    }
+    .vp-tab.active {
+      background: var(--accent-cyan);
+      color: #050608;
+      border-color: var(--accent-cyan);
+      font-weight: 700;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.35);
     }
 
     /* SECTIONS */
@@ -300,8 +474,8 @@
     /* KPI GRID */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+      gap: 14px;
     }
     .kpi-card {
       background: var(--surface);
@@ -310,6 +484,7 @@
       padding: 16px;
       position: relative;
       overflow: hidden;
+      min-width: 0;
       transition: transform 0.2s, border-color 0.2s;
     }
     .kpi-card:hover {
@@ -337,6 +512,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
     }
     .kpi-value {
       font-family: var(--font-mono);
@@ -344,6 +521,9 @@
       font-weight: 700;
       color: var(--fg);
       margin-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .kpi-sub {
       font-size: 11px;
@@ -352,6 +532,9 @@
       align-items: center;
       gap: 4px;
       font-family: var(--font-mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .progress-bar-wrap {
       width: 100%;
@@ -378,6 +561,7 @@
       border-radius: 8px;
       padding: 24px;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .arch-grid {
       display: grid;
@@ -392,6 +576,7 @@
       border-radius: 8px;
       padding: 20px;
       position: relative;
+      min-width: 0;
       transition: all 0.2s ease;
     }
     .node-box:hover {
@@ -476,6 +661,7 @@
     }
     .pipe-line {
       width: 100%;
+      max-width: 100%;
       height: 3px;
       background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
       position: relative;
@@ -531,7 +717,18 @@
     }
     @media (max-width: 1024px) {
       .workflow-steps-grid { grid-template-columns: 1fr; }
-      .arch-grid { grid-template-columns: 1fr; }
+      .arch-grid {
+        grid-template-columns: 1fr;
+        min-width: 0;
+        width: 100%;
+      }
+      .backbone-pipe {
+        order: 2;
+        margin: 16px 0;
+        width: 100%;
+      }
+      .node-box.edge { order: 1; }
+      .node-box.compute { order: 3; }
     }
     .workflow-step-card {
       background: var(--surface-2);
@@ -597,7 +794,7 @@
     /* CONSILIUM AGENTS */
     .agents-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
       gap: 16px;
     }
     .agent-card {
@@ -605,6 +802,7 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 18px;
+      min-width: 0;
       transition: all 0.2s;
     }
     .agent-card:hover {
@@ -616,6 +814,8 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
     }
     .agent-name-title {
       font-family: var(--font-mono);
@@ -652,12 +852,14 @@
       padding-top: 8px;
       display: flex;
       justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     /* 94 MODELS SECTION & SPOTLIGHT CARDS */
     .models-spotlight-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
       gap: 16px;
       margin-bottom: 20px;
     }
@@ -667,6 +869,7 @@
       border-radius: 8px;
       padding: 18px;
       position: relative;
+      min-width: 0;
     }
     .spotlight-card.paid { border-top: 3px solid var(--accent-amber); }
     .spotlight-card.free { border-top: 3px solid var(--accent-green); }
@@ -678,6 +881,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
     }
     .spotlight-list {
       display: flex;
@@ -693,10 +898,18 @@
       border-radius: 4px;
       font-family: var(--font-mono);
       font-size: 11px;
+      gap: 8px;
     }
-    .spotlight-name { font-weight: 600; color: var(--fg); }
-    .spotlight-price { color: var(--accent-amber); font-weight: 600; }
-    .spotlight-free { color: var(--accent-green); font-weight: 600; }
+    .spotlight-name {
+      font-weight: 600;
+      color: var(--fg);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+    .spotlight-price { color: var(--accent-amber); font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+    .spotlight-free { color: var(--accent-green); font-weight: 600; white-space: nowrap; flex-shrink: 0; }
 
     /* MODELS TABLE CONTROLS */
     .models-controls {
@@ -742,6 +955,7 @@
       padding: 4px 12px;
       gap: 8px;
       width: 300px;
+      max-width: 100%;
     }
     .model-search input {
       background: transparent;
@@ -756,7 +970,7 @@
     /* ACCOUNTING & FINANCIAL TELEMETRY */
     .accounting-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
       gap: 20px;
     }
     .account-card {
@@ -765,6 +979,8 @@
       border-radius: 8px;
       padding: 20px;
       position: relative;
+      min-width: 0;
+      overflow-x: auto;
     }
     .account-card.capex { border-top: 3px solid var(--accent-purple); }
     .account-card.opex { border-top: 3px solid var(--accent-cyan); }
@@ -776,6 +992,8 @@
       margin-bottom: 14px;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 8px;
     }
     .account-title {
       font-family: var(--font-mono);
@@ -800,20 +1018,26 @@
     }
     .cost-table td {
       padding: 6px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid var(--border);
       color: var(--fg-dim);
+    }
+    .cost-table td:first-child {
+      word-break: break-word;
+      padding-right: 8px;
     }
     .cost-table td:last-child {
       text-align: right;
       font-weight: 600;
       color: var(--fg);
       white-space: nowrap;
+      vertical-align: top;
     }
     .cost-note {
       font-size: 10px;
       color: var(--fg-faint);
       display: block;
       margin-top: 2px;
+      word-break: break-word;
     }
 
     /* PROCESS INSPECTOR */
@@ -852,6 +1076,27 @@
       color: #000;
     }
 
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 12px;
+      gap: 8px;
+      width: 300px;
+      max-width: 100%;
+    }
+    .search-box input {
+      background: transparent;
+      border: none;
+      color: var(--fg);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      width: 100%;
+      outline: none;
+    }
+
     .table-wrap {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -859,8 +1104,10 @@
       overflow-x: auto;
       max-height: 520px;
       position: relative;
+      -webkit-overflow-scrolling: touch;
     }
-    table {
+    .table-wrap table, table {
+      min-width: max-content;
       width: 100%;
       border-collapse: collapse;
       font-family: var(--font-mono);
@@ -900,7 +1147,7 @@
     .badge-web { background: rgba(0, 229, 255, 0.15); color: var(--accent-cyan); border: 1px solid var(--border-cyan); }
     .badge-mcp { background: rgba(0, 230, 118, 0.15); color: var(--accent-green); border: 1px solid var(--border-green); }
     .badge-lsp { background: rgba(255, 214, 0, 0.15); color: var(--accent-amber); border: 1px solid var(--border-amber); }
-    .badge-system { background: rgba(255, 255, 255, 0.08); color: var(--fg-dim); border: 1px solid var(--border); }
+    .badge-system { background: var(--surface-2); color: var(--fg-dim); border: 1px solid var(--border); }
 
     /* LOG STREAM FEED */
     .feed-wrap {
@@ -923,7 +1170,7 @@
       padding: 4px 8px;
       border-radius: 4px;
       background: var(--surface-2);
-      border: 1px solid rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
     }
     .log-time { color: var(--fg-faint); }
     .log-host { color: var(--accent-cyan); font-weight: 600; }
@@ -948,6 +1195,112 @@
     }
     footer a { color: var(--accent-cyan); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
+
+    /* RESPONSIVE BREAKPOINTS (mobile-first 320px -> 768px -> 1024px) */
+    @media (max-width: 768px) {
+      .header-inner {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .brand-group {
+        justify-content: center;
+        flex-wrap: wrap;
+        text-align: center;
+      }
+      .header-actions {
+        justify-content: center;
+        width: 100%;
+      }
+      .models-controls, .process-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .model-search, .search-box {
+        width: 100%;
+      }
+      .model-tabs, .category-tabs {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 0 12px;
+      }
+      .brand-logo {
+        font-size: 14px;
+      }
+      .brand-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+      }
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .section-title {
+        font-size: 13px;
+        flex-wrap: wrap;
+      }
+      .section-subtitle {
+        font-size: 11px;
+      }
+      .node-box {
+        padding: 14px;
+      }
+      .arch-diagram-wrap {
+        padding: 12px;
+      }
+      footer {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+        justify-content: center;
+      }
+      footer div {
+        justify-content: center;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .container {
+        padding: 0 8px;
+      }
+      .kpi-value {
+        font-size: 18px;
+      }
+      .kpi-card {
+        padding: 12px;
+      }
+      .node-metrics-mini {
+        grid-template-columns: 1fr;
+      }
+      .vp-tab {
+        min-width: 60px;
+        font-size: 10px;
+        padding: 5px 6px;
+      }
+      .btn-ctrl {
+        font-size: 10px;
+        padding: 5px 8px;
+      }
+      .lang-btn {
+        font-size: 10px;
+        padding: 3px 6px;
+      }
+      .spotlight-card {
+        padding: 12px;
+      }
+      .account-card {
+        padding: 12px;
+      }
+      .account-total {
+        font-size: 17px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1020,8 +1373,20 @@
 
   <main class="container">
 
+    <!-- SINGLE-VIEWPORT TAB NAV (mobile-first, no page scroll) -->
+    <nav class="vp-tabs" id="vp-tabs">
+      <button class="vp-tab active" data-sec="s01" onclick="vpShow('s01')">KPI</button>
+      <button class="vp-tab" data-sec="s02" onclick="vpShow('s02')"><span class="t-en">TOPOLOGY</span><span class="t-uk">ТОПОЛОГІЯ</span><span class="t-ru">ТОПОЛОГИЯ</span></button>
+      <button class="vp-tab" data-sec="s03" onclick="vpShow('s03')"><span class="t-en">LOGIC</span><span class="t-uk">ЛОГІКА</span><span class="t-ru">ЛОГИКА</span></button>
+      <button class="vp-tab" data-sec="s04" onclick="vpShow('s04')"><span class="t-en">AGENTS</span><span class="t-uk">АГЕНТИ</span><span class="t-ru">АГЕНТЫ</span></button>
+      <button class="vp-tab" data-sec="s05" onclick="vpShow('s05')"><span class="t-en">LLM·94</span><span class="t-uk">LLM·94</span><span class="t-ru">LLM·94</span></button>
+      <button class="vp-tab" data-sec="s06" onclick="vpShow('s06')"><span class="t-en">COSTS</span><span class="t-uk">ВАРТІСТЬ</span><span class="t-ru">ЗАТРАТЫ</span></button>
+      <button class="vp-tab" data-sec="s07" onclick="vpShow('s07')"><span class="t-en">PROCS</span><span class="t-uk">ПРОЦЕСИ</span><span class="t-ru">ПРОЦЕССЫ</span></button>
+      <button class="vp-tab" data-sec="s08" onclick="vpShow('s08')"><span class="t-en">LOGS</span><span class="t-uk">ЛОГИ</span><span class="t-ru">ЛОГИ</span></button>
+    </nav>
+
     <!-- SECTION 01: KPI METRICS GRID -->
-    <section class="section-block">
+    <section class="section-block" id="s01">
       <div class="section-header">
         <div class="section-title">
           <span class="tag">[01]</span>
@@ -1168,7 +1533,7 @@
     </section>
 
     <!-- SECTION 02: DUAL-NODE TOPOLOGY -->
-    <section class="section-block">
+    <section class="section-block" id="s02">
       <div class="section-header">
         <div class="section-title">
           <span class="tag">[02]</span>
@@ -1198,11 +1563,11 @@
             <div class="node-metrics-mini">
               <div class="mini-metric">
                 <div class="mini-metric-label">Public IP</div>
-                <div class="mini-metric-val">136.114.26.252</div>
+                <div class="mini-metric-val copyable" onclick="copyText('136.114.26.252')" title="Click to copy">136.114.26.252 ⎘</div>
               </div>
               <div class="mini-metric">
                 <div class="mini-metric-label">Mesh IP</div>
-                <div class="mini-metric-val">100.125.200.49</div>
+                <div class="mini-metric-val copyable" onclick="copyText('100.125.200.49')" title="Click to copy">100.125.200.49 ⎘</div>
               </div>
               <div class="mini-metric">
                 <div class="mini-metric-label">RAM / Swap</div>
@@ -1229,7 +1594,7 @@
 
           <!-- CONNECTOR / WIRE GUARD PIPE -->
           <div class="backbone-pipe">
-            <div class="backbone-pill">
+            <div class="backbone-pill copyable" onclick="copyText('100.125.200.49 <-> 100.66.98.4 (UDP 51820)')" title="Click to copy tunnel info">
               <span class="t-en">WIREGUARD MESH</span>
               <span class="t-uk">WIREGUARD СІТКА</span>
               <span class="t-ru">WIREGUARD СЕТЬ</span>
@@ -1257,11 +1622,11 @@
             <div class="node-metrics-mini">
               <div class="mini-metric">
                 <div class="mini-metric-label">Public IP</div>
-                <div class="mini-metric-val">34.159.202.82</div>
+                <div class="mini-metric-val copyable" onclick="copyText('34.159.202.82')" title="Click to copy">34.159.202.82 ⎘</div>
               </div>
               <div class="mini-metric">
                 <div class="mini-metric-label">Mesh IP</div>
-                <div class="mini-metric-val">100.66.98.4</div>
+                <div class="mini-metric-val copyable" onclick="copyText('100.66.98.4')" title="Click to copy">100.66.98.4 ⎘</div>
               </div>
               <div class="mini-metric">
                 <div class="mini-metric-label">Hardware</div>
@@ -1294,7 +1659,7 @@
     </section>
 
     <!-- SECTION 03: HOW THE CONSILIUM WORKS -->
-    <section class="section-block">
+    <section class="section-block" id="s03">
       <div class="section-header">
         <div class="section-title">
           <span class="tag">[03]</span>
@@ -1417,7 +1782,7 @@
     </section>
 
     <!-- SECTION 04: CONSILIUM AGENTS -->
-    <section class="section-block">
+    <section class="section-block" id="s04">
       <div class="section-header">
         <div class="section-title">
           <span class="tag">[04]</span>
@@ -1524,7 +1889,7 @@
     </section>
 
     <!-- SECTION 05: FULL 94 LLMs ROSTER (FREE VS PAID, COSTS & LIMITS) -->
-    <section class="section-block">
+    <section class="section-block" id="s05">
       <div class="section-header">
         <div class="section-title">
           <span class="tag">[05]</span>
@@ -1663,6 +2028,7 @@
         <div class="model-search">
           <span style="color: var(--fg-dim);">&gt;</span>
           <input type="text" id="model-search-input" placeholder="Search model, provider, context..." oninput="searchModels(this.value)">
+          <span id="models-count-badge" style="font-size: 11px; color: var(--fg-dim); white-space: nowrap; margin-left: 6px; font-family: var(--font-mono);">94 models</span>
         </div>
       </div>
 
@@ -1717,7 +2083,7 @@
     </section>
 
     <!-- SECTION 06: INFRASTRUCTURE COSTS, CAPEX & TOKEN ACCOUNTING -->
-    <section class="section-block">
+    <section class="section-block" id="s06">
       <div class="section-header">
         <div class="section-title">
           <span class="tag">[06]</span>
@@ -1932,7 +2298,7 @@
     </section>
 
     <!-- SECTION 07: LIVE PROCESS INSPECTOR -->
-    <section class="section-block">
+    <section class="section-block" id="s07">
       <div class="section-header">
         <div class="section-title">
           <span class="tag">[07]</span>
@@ -2007,7 +2373,7 @@
     </section>
 
     <!-- SECTION 08: LIVE DOMAIN HIT FEED -->
-    <section class="section-block">
+    <section class="section-block" id="s08">
       <div class="section-header">
         <div class="section-title">
           <span class="tag">[08]</span>
@@ -2046,6 +2412,9 @@
     </footer>
 
   </main>
+
+  <div id="copy-toast" class="copy-toast"></div>
+  <button id="btn-back-to-top" class="btn-back-to-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="Back to top" aria-label="Back to top">↑</button>
 
   <script>
     // RAW MODELS CATALOG DATA (94 MODELS)
@@ -2158,9 +2527,56 @@
       document.getElementById('step-detail-body').textContent = data.body[currentLang] || data.body.en;
     }
 
+    // CLIPBOARD COPY UTILITIES
+    let toastTimeout = null;
+    function showToast(msg) {
+      const toast = document.getElementById('copy-toast');
+      if (!toast) return;
+      toast.textContent = msg;
+      toast.classList.add('show');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2000);
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '-9999px';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+      } catch (e) {
+        console.warn('ExecCommand copy failed:', e);
+      }
+      document.body.removeChild(ta);
+    }
+
+    function copyText(text) {
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('COPIED: ' + text);
+        }).catch(() => {
+          fallbackCopy(text);
+          showToast('COPIED: ' + text);
+        });
+      } else {
+        fallbackCopy(text);
+        showToast('COPIED: ' + text);
+      }
+    }
+
     // 94 MODELS ROSTER LOGIC
     let activeModelFilter = 'all';
     let modelSearchQuery = '';
+    let modelSearchTimer = null;
 
     function filterModels(f) {
       activeModelFilter = f;
@@ -2171,8 +2587,11 @@
     }
 
     function searchModels(q) {
-      modelSearchQuery = (q || '').toLowerCase().trim();
-      renderModelsTable();
+      if (modelSearchTimer) clearTimeout(modelSearchTimer);
+      modelSearchTimer = setTimeout(() => {
+        modelSearchQuery = (q || '').toLowerCase().trim();
+        renderModelsTable();
+      }, 100);
     }
 
     function renderModelsTable() {
@@ -2186,6 +2605,13 @@
         const s = (m.name + ' ' + m.id + ' ' + m.provider + ' ' + (m.category || '') + ' ' + (m.desc || '')).toLowerCase();
         return s.includes(modelSearchQuery);
       });
+
+      const countBadge = document.getElementById('models-count-badge');
+      if (countBadge) {
+        countBadge.textContent = (filtered.length === rawCatalog.length) 
+          ? rawCatalog.length + ' models' 
+          : filtered.length + ' / ' + rawCatalog.length + ' models';
+      }
 
       if (filtered.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--fg-dim); padding: 24px;">No models found</td></tr>';
@@ -2222,6 +2648,7 @@
     let allProcesses = [];
     let selectedCategory = 'all';
     let searchQuery = '';
+    let procSearchTimer = null;
 
     function filterProcessCategory(cat) {
       selectedCategory = cat;
@@ -2232,8 +2659,11 @@
     }
 
     function handleProcessSearch(q) {
-      searchQuery = (q || '').toLowerCase().trim();
-      renderProcessTable();
+      if (procSearchTimer) clearTimeout(procSearchTimer);
+      procSearchTimer = setTimeout(() => {
+        searchQuery = (q || '').toLowerCase().trim();
+        renderProcessTable();
+      }, 100);
     }
 
     function renderProcessTable() {
@@ -2247,6 +2677,27 @@
         const target = (p.name + ' ' + (p.role || '') + ' ' + (p.pid || '') + ' ' + (p.node || '')).toLowerCase();
         return target.includes(searchQuery);
       });
+
+      const pl = document.getElementById('process-count-label');
+      if (pl) {
+        const total = allProcesses.length;
+        const count = filtered.length;
+        if (count === total || total === 0) {
+          const countLabel = {
+            en: 'Tracking ' + total + ' active processes',
+            uk: 'Відстежується ' + total + ' активних процесів',
+            ru: 'Отслеживается ' + total + ' активных процессов'
+          };
+          pl.textContent = countLabel[currentLang] || countLabel.en;
+        } else {
+          const countLabel = {
+            en: 'Showing ' + count + ' of ' + total + ' processes',
+            uk: 'Показано ' + count + ' з ' + total + ' процесів',
+            ru: 'Показано ' + count + ' из ' + total + ' процессов'
+          };
+          pl.textContent = countLabel[currentLang] || countLabel.en;
+        }
+      }
 
       if (filtered.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--fg-dim); padding: 24px;">No processes found</td></tr>';
@@ -2273,12 +2724,27 @@
       return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // TELEMETRY FETCHER
+    // TELEMETRY FETCHER WITH PAGE VISIBILITY MANAGEMENT
+    let telemetryTimer = null;
+
     async function fetchTelemetry() {
       try {
         const res = await fetch('/api/logs?_t=' + Date.now());
         if (!res.ok) return;
         const data = await res.json();
+
+        // Update live poll timestamp indicator
+        const pollEl = document.getElementById('poll-indicator');
+        if (pollEl) {
+          const now = new Date();
+          const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          const pollTexts = {
+            en: 'Auto-sync: 4s · Synced ' + timeStr,
+            uk: 'Автосинхронізація: 4с · Синхр. ' + timeStr,
+            ru: 'Автосинхронизация: 4с · Синхр. ' + timeStr
+          };
+          pollEl.textContent = pollTexts[currentLang] || pollTexts.en;
+        }
 
         if (data.computeMetrics) {
           const m = data.computeMetrics;
@@ -2319,13 +2785,6 @@
 
         if (data.processes && Array.isArray(data.processes)) {
           allProcesses = data.processes;
-          const countLabel = {
-            en: 'Tracking ' + allProcesses.length + ' active processes',
-            uk: 'Відстежується ' + allProcesses.length + ' активних процесів',
-            ru: 'Отслеживается ' + allProcesses.length + ' активных процессов'
-          };
-          const pl = document.getElementById('process-count-label');
-          if (pl) pl.textContent = countLabel[currentLang] || countLabel.en;
           renderProcessTable();
         }
 
@@ -2349,13 +2808,109 @@
       }
     }
 
+    function startTelemetryPolling() {
+      if (telemetryTimer) clearInterval(telemetryTimer);
+      telemetryTimer = setInterval(() => {
+        if (!document.hidden) {
+          fetchTelemetry();
+        }
+      }, 4000);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        fetchTelemetry();
+        startTelemetryPolling();
+      } else {
+        if (telemetryTimer) {
+          clearInterval(telemetryTimer);
+          telemetryTimer = null;
+        }
+      }
+    });
+
+    // SINGLE-VIEWPORT TABS NAVIGATION
+    function vpShow(secId) {
+      const sec = document.getElementById(secId);
+      if (sec) {
+        const header = document.querySelector('header');
+        const headerHeight = header ? header.offsetHeight : 70;
+        const targetTop = sec.getBoundingClientRect().top + window.pageYOffset - headerHeight - 12;
+        window.scrollTo({
+          top: Math.max(0, targetTop),
+          behavior: 'smooth'
+        });
+      }
+      document.querySelectorAll('.vp-tab').forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-sec') === secId);
+      });
+    }
+
+    // SCROLL LISTENER: BACK TO TOP + ACTIVE TAB SYNCHRONIZATION
+    window.addEventListener('scroll', () => {
+      const btt = document.getElementById('btn-back-to-top');
+      if (btt) {
+        if (window.pageYOffset > 300) {
+          btt.classList.add('show');
+        } else {
+          btt.classList.remove('show');
+        }
+      }
+
+      const sections = document.querySelectorAll('.section-block[id]');
+      let currentSec = 's01';
+      sections.forEach(sec => {
+        const top = sec.getBoundingClientRect().top;
+        if (top <= 140) currentSec = sec.id;
+      });
+      document.querySelectorAll('.vp-tab').forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-sec') === currentSec);
+      });
+    }, { passive: true });
+
+    // KEYBOARD SHORTCUTS
+    window.addEventListener('keydown', (e) => {
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      const isInput = activeTag === 'input' || activeTag === 'textarea';
+
+      if (e.key === 'Escape') {
+        if (isInput) {
+          document.activeElement.value = '';
+          if (document.activeElement.id === 'model-search-input') searchModels('');
+          if (document.activeElement.id === 'proc-search') handleProcessSearch('');
+          document.activeElement.blur();
+        }
+        return;
+      }
+
+      if (isInput) return;
+
+      // 1-8 section quick navigation
+      if (e.key >= '1' && e.key <= '8') {
+        vpShow('s0' + e.key);
+      } else if (e.key === 't' || e.key === 'T') {
+        toggleTheme();
+      } else if (e.key === 'l' || e.key === 'L') {
+        const langs = ['en', 'uk', 'ru'];
+        const nextLang = langs[(langs.indexOf(currentLang) + 1) % langs.length];
+        setLanguage(nextLang);
+      } else if (e.key === '/') {
+        e.preventDefault();
+        const mInput = document.getElementById('model-search-input');
+        if (mInput) {
+          mInput.focus();
+          mInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    });
+
     // INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
       initTheme();
       setLanguage(currentLang);
       renderModelsTable();
       fetchTelemetry();
-      setInterval(fetchTelemetry, 4000);
+      startTelemetryPolling();
     });
   </script>
 </body>

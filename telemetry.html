@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaline.Network — Live Telemetry Console</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(0,255,102,0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(0,221,255,0.03) 0%, transparent 50%),
+        radial-gradient(circle at 50% 20%, rgba(255,187,0,0.03) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .header {
+      background: linear-gradient(135deg, #00040a 0%, #001a2e 100%);
+      border-bottom: 2px solid #00ff66;
+      padding: 16px 32px;
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 0 30px rgba(0,255,102,0.15);
+    }
+    .header .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo .icon {
+      color: #00ff66;
+      font-size: 20px;
+      animation: pulse-glow 2s infinite;
+    }
+    .logo h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #00ff66;
+      letter-spacing: 1px;
+    }
+    .header .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(0,255,102,0.1);
+      border-radius: 4px;
+    }
+    .led {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #00ff66;
+      box-shadow: 0 0 10px #00ff66;
+      animation: led-pulse 2s infinite;
+    }
+    .led.warning { background: #ffbb00; box-shadow: 0 0 10px #ffbb00; animation: led-pulse-warn 1s infinite; }
+    .led.danger { background: #ff4444; box-shadow: 0 0 10px #ff4444; animation: led-pulse-danger 0.5s infinite; }
+    .led.off { background: #555; box-shadow: none; animation: none; }
+    .clock { font-size: 13px; color: #00ddff; font-variant-numeric: tabular-nums; }
+    @keyframes pulse-glow { 0%,100% { opacity:1; filter: drop-shadow(0 0 8px #00ff66); } 50% { opacity:0.6; filter: drop-shadow(0 0 4px #00ff66); } }
+    @keyframes led-pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    @keyframes led-pulse-warn { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+    @keyframes led-pulse-danger { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      padding: 24px 32px;
+      position: relative;
+      z-index: 10;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .card {
+      background: rgba(26, 26, 46, 0.8);
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 18px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      border-color: #00ff66;
+      box-shadow: 0 0 30px rgba(0,255,102,0.2);
+      transform: translateY(-2px);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .card-header .title { color: #00ddff; font-weight: 600; }
+    .card-header .badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(0,255,102,0.15);
+      color: #00ff66;
+    }
+    .card-header .badge.warning { background: rgba(255,187,0,0.2); color: #ffbb00; }
+    .card-header .badge.danger { background: rgba(255,68,68,0.2); color: #ff4444; }
+
+    /* Gauge styles */
+    .gauge-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .gauge {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #0f3460 0deg, #0a0a1a 0deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .gauge::before {
+      content: '';
+      position: absolute;
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: #0a0a1a;
+      z-index: 1;
+    }
+    .gauge .value {
+      position: relative; z-index: 2;
+      font-size: 16px; font-weight: 700;
+      color: #00ff66;
+      text-align: center;
+    }
+    .gauge .label {
+      font-size: 10px; color: #888;
+      position: relative; z-index: 2;
+    }
+    .gauge-value-display {
+      font-size: 20px;
+      font-weight: 700;
+      color: #00ff66;
+      margin-left: 8px;
+      min-width: 60px;
+    }
+    .gauge-value-display.warning { color: #ffbb00; }
+    .gauge-value-display.danger { color: #ff4444; }
+
+    /* Bar styles */
+    .bar-container {
+      background: #0f3460;
+      border-radius: 4px;
+      height: 18px;
+      position: relative;
+      overflow: hidden;
+      margin: 6px 0;
+      transition: height 0.3s ease;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #050505;
+    }
+    .bar-fill.low { background: linear-gradient(90, #00ff66, #00cc44); }
+    .bar-fill.medium { background: linear-gradient(9abc, #ffbb00, #e09a00); }
+    .bar-fill.high { background: linear-gradient(90, #ff6b35, #ff4444); }
+    .bar-fill.critical { background: linear-gradient(90, #ff4444, #cc0000); animation: pulse-red 1s infinite; }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 4px;
+      border-left: 2px solid #0f3460;
+    }
+    .stat:hover { border-left-color: #00ff66; }
+    .stat .label { color: #888; }
+    .stat .value { color: #00ff66; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .stat .value.warning { color: #ffbb00; }
+    .stat .value.danger { color: #ff4444; }
+
+    /* Timeline log */
+    .timeline {
+      font-size: 11px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 8px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 6px;
+      border: 1px solid #333;
+      font-variant-numeric: tabular-nums;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 8px;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .timeline-item .time { color: #00ddff; }
+    .timeline-item .status-ok { color: #00ff66; }
+    .timeline-item .status-warn { color: #ffbb00; }
+    .timeline-item .status-err { color: #ff4444; }
+    .timeline-item .msg { color: #ccc; flex: 1; }
+
+    /* Pulse animation */
+    @keyframes pulse-red { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+
+    /* Connection status bar */
+    .conn-status {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #333;
+      z-index: 100;
+    }
+    .conn-status-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90, #00ff66, #00ddff);
+      transition: width 0.5s ease;
+      animation: conn-pulse 3s linear infinite;
+    }
+    @keyframes conn-pulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
+
+    /* Refresh animation */
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid #333;
+      border-top-color: #00ff66;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .full-width { grid-column: 1 / -1; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .dashboard { grid-template-columns: 1fr; padding: 12px; }
+      .header { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="icon"><i class="fas fa-server"></i></div>
+    <h1>EVALINE.NETWORK</h1>
+  </div>
+  <div class="status-bar">
+    <div class="status-item">
+      <span class="led" id="conn-led"></span>
+      <span>Подключение: <strong id="conn-status">CONNECTING...</strong></span>
+    </div>
+    <div class="status-item">
+      <span class="clock" id="clock">--:--:-- UTC</span>
+    </div>
+    <div class="status-item">
+      <span>Обновление: <strong id="refresh-timer">10</strong>s</span>
+    </div>
+    <div class="status-item">
+      <span class="spinner" id="loading-spinner" style="display:none"></span>
+    </div>
+  </div>
+</div>
+
+<div class="conn-status">
+  <div class="conn-status-fill" id="conn-status-bar"></div>
+</div>
+
+<div class="dashboard" id="dashboard"></div>
+
+<script>
+// === Real-time telemetry data from evaline.network API ===
+const API_ENDPOINT = '/api/health';
+const REFRESH_INTERVAL = 10000; // 10 seconds
+
+let refreshTimer = 10;
+let telemetryData = null;
+let timelineEvents = [];
+let isConnected = false;
+
+// === Clock ===
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// === Fetch telemetry ===
+async function fetchTelemetry() {
+  const spinner = document.getElementById('loading-spinner');
+  const connLed = document.getElementById('conn-led');
+  const connStatus = document.getElementById('conn-status');
+  const connBar = document.getElementById('conn-status-bar');
+
+  spinner.style.display = 'inline-block';
+
+  try {
+    const response = await fetch(API_ENDPOINT, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
+
+    // Check rate limit header
+    const rateLimitRemaining = response.headers.get('x-ratelimit-remaining');
+    const rateLimitLimit = response.headers.get('x-ratelimit-limit');
+
+    telemetryData = { ...data, _meta: {
+      rateLimitRemaining: parseInt(rateLimitRemaining) || 0,
+      rateLimitLimit: parseInt(rateLimitLimit) || 100,
+      fetchedAt: new Date().toISOString()
+    }};
+
+    isConnected = true;
+    connLed.classList.remove('off', 'warning', 'danger');
+    connLed.classList.add('led');
+    connStatus.textContent = 'CONNECTED';
+    connStatus.style.color = '#00ff66';
+    connBar.style.width = '100%';
+
+    addTimelineEvent('success', `Telemetry обновлена: status=${data.status}, uptime=${formatUptime(data.uptimeSeconds)}, models=${data.availableModels}`);
+
+    renderDashboard(data);
+  } catch (err) {
+    isConnected = false;
+    connLed.classList.remove('led', 'warning');
+    connLed.classList.add('danger');
+    connStatus.textContent = 'OFFLINE';
+    connStatus.style.color = '#ff4444';
+    connBar.style.width = '0%';
+    connBar.style.background = '#ff4444';
+
+    addTimelineEvent('error', `Ошибка соединения: ${err.message}`);
+  } finally {
+    spinner.style.display = 'none';
+  }
+}
+
+// === Format uptime ===
+function formatUptime(seconds) {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  if (days > 0) return `${days}d ${hours}h ${mins}m`;
+  if (hours > 0) return `${hours}h ${mins}m ${secs}s`;
+  return `${mins}m ${secs}s`;
+}
+
+// === Format bytes ===
+function formatBytes(mb) {
+  if (mb >= 1024) return `${(mb/1024).toFixed(1)} GB`;
+  return `${mb} MB`;
+}
+
+// === Gauge color based on percentage ===
+function getGaugeColor(pct) {
+  if (pct < 50) return '#00ff66';
+  if (pct < 75) return '#ffbb00';
+  if (pct < 90) return '#ff6b35';
+  return '#ff4444';
+}
+
+function getGaugeClass(pct) {
+  if (pct < 50) return '';
+  if (pct < 75) return 'warning';
+  if (pct < 90) return 'high';
+  return 'critical';
+}
+
+// === Render gauge ===
+function renderGauge(label, value, max, unit, suffix = '') {
+  const pct = (value / max) * 100;
+  const color = getGaugeColor(pct);
+  const cls = getGaugeClass(pct);
+  const rotation = pct * 3.6;
+
+  return `
+    <div class="gauge-container">
+      <div class="gauge" style="background: conic-gradient(from 0deg, ${color} 0deg, #0f3460 ${rotation}deg, #0a0a1a 0deg);">
+        <div class="value" style="color: ${color}">${pct.toFixed(0)}%</div>
+      </div>
+      <div class="gauge-value-display ${cls}">${value.toFixed(1)}<span style="font-size:10px;color:#888">${suffix}</span></div>
+      <div class="gauge-label" style="color:#888;font-size:11px">${label}</div>
+    </div>
+  `;
+}
+
+// === Render bar ===
+function renderBar(label, value, max, unit) {
+  const pct = Math.min((value / max) * 100, 100);
+  let cls = 'low';
+  if (pct >= 75) cls = 'high';
+  if (pct >= 90) cls = 'critical';
+  if (pct >= 50 && pct < 75) cls = 'medium';
+
+  return `
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+        <span style="color:#888">${label}</span>
+        <span style="color:${getGaugeColor(pct)}">${value.toFixed(pct<1?2:1)} ${unit} (${pct.toFixed(0)}%)</span>
+      </div>
+      <div class="bar-container">
+        <div class="bar-fill ${cls}" style="width:${pct}%"></div>
+      </div>
+    </div>
+  `;
+}
+
+// === Render dashboard ===
+function renderDashboard(d) {
+  const telemetry = d.telemetry || {};
+  const frankfurt = telemetry.frankfurt || {};
+  const iowa = telemetry.iowa || {};
+  const databases = d.databases || {};
+  const plugins = (d.plugins && d.plugins.list) || [];
+  const pluginHealth = (d.plugins && d.plugins.health) || {};
+  const meta = d._meta || {};
+
+  const memPctFR = frankfurt.memTotalGb ? (parseFloat(frankfurt.memUsedGb) / frankfurt.memTotalGb) * 100 : 0;
+  const memPctIO = iowa.memTotalMb ? (iowa.memUsedMb / iowa.memTotalMb) * 100 : 0;
+  const cpuPctFR = frankfurt.cpuPct || 0;
+  const cpuPctIO = iowa.cpuPct || 0;
+
+  let html = '';
+
+  // === Header Stats ===
+  html += `
+<div class="card full-width">
+  <div class="card-header">
+    <span class="title">📡 LIVE DASHBOARD — ${d.status.toUpperCase()}</span>
+    <span class="badge" style="${d.status === 'online' ? 'background: rgba(0,255,102,0.15); color: #00ff66;' : 'background: rgba(255,68,68,0.2); color: #ff4444;'}">${d.status}</span>
+  </div>
+  <div class="stats-grid">
+    <div class="stat">
+      <span class="label">Uptime</span>
+      <span class="value">${formatUptime(d.uptimeSeconds)}</span>
+    </div>
+    <div class="stat">
+      <span class="label">Версия</span>
+      <span class="value">${d.version}</span>
+    </div>
+    <div class="stat">
+      <span class="label">Сервер</span>
+      <span class="value">${d.server}</span>
+    </div>
+    <div class="stat">
+      <span class="label">Auth</span>
+      <span class="value">${d.authSource}</span>
+    </div>
+    <div class="stat">
+      <span class="label">API Key</span>
+      <span class="value">${d.hasServerApiKey ? '✅ Подключен' : '❌ Отключен'}</span>
+    </div>
+    <div class="stat">
+      <span class="label">Rate Limit</span>
+      <span class="value" style="color:${meta.rateLimitRemaining > 50 ? '#00ff66' : meta.rateLimitRemaining > 10 ? '#ffbb00' : '#ff4444'}">${meta.rateLimitRemaining}/${meta.rateLimitLimit}</span>
+    </div>
+  </div>
+</div>
+`;
+
+  // === EvaBrain (Frankfurt) ===
+  html += `
+<div class="card">
+  <div class="card-header">
+    <span class="title">🧠 EVABRAIN — Compute Core (ФРГ / Frankfurt)</span>
+    <span class="badge">${frankfurt.status || 'HEALTHY'}</span>
+  </div>
+  ${renderGauge('CPU Load', cpuPctFR, 100, '%')}
+  ${renderBar('RAM Usage', parseFloat(frankfurt.memUsedGb), frankfurt.memTotalGb, 'GB')}
+  <div class="stats-grid" style="margin-top:12px">
+    <div class="stat"><span class="label">Machine</span><span class="value">c3-standard-8</span></div>
+    <div class="stat"><span class="label">Platform</span><span class="value">Intel Sapphire Rapids</span></div>
+    <div class="stat"><span class="label">CPU Load Avg</span><span class="value" style="color:${getGaugeColor(cpuPctFR*0.6)}">${frankfurt.load}</span></div>
+    <div class="stat"><span class="label">Mesh Latency</span><span class="value" style="color:${getGaugeColor(telemetry.meshLatencyMs > 200 ? 100 : telemetry.meshLatencyMs / 4)}">${telemetry.meshLatencyMs}ms</span></div>
+  </div>
+</div>
+`;
+
+  // === EvaFace (Iowa) ===
+  html += `
+<div class="card">
+  <div class="card-header">
+    <span class="title">👁️ EVAFACE — Edge Gateway (США / Iowa)</span>
+    <span class="badge">ONLINE</span>
+  </div>
+  ${renderGauge('CPU Load', cpuPctIO, 100, '%')}
+  ${renderBar('RAM Usage', iowa.memUsedMb, iowa.memTotalMb, 'MB')}
+  <div class="stats-grid" style="margin-top:12px">
+    <div class="stat"><span class="label">Machine</span><span class="value">e2-micro</span></div>
+    <div class="stat"><span class="label">Web Server</span><span class="value">Caddy 2.11</span></div>
+    <div class="stat"><span class="label">CPU Load Avg</span><span class="value" style="color:${getGaugeColor(cpuPctIO*0.6)}">${iowa.load}</span></div>
+    <div class="stat"><span class="label">TLS</span><span class="value">✅ TLS 1.3 / HTTP/3</span></div>
+  </div>
+</div>
+`;
+
+  // === LLM Gateways ===
+  html += `
+<div class="card">
+  <div class="card-header">
+    <span class="title">🤖 LLM PROVIDERS & MODELS</span>
+    <span class="badge" style="background: rgba(0,255,102,0.15); color: #00ff66;">${d.availableModels} онлайн</span>
+  </div>
+  <div class="stats-grid">
+    <div class="stat"><span class="label">Google Gemini (ADC)</span><span class="value" style="color:#00ff66">✅ ONLINE</span></div>
+    <div class="stat"><span class="label">  ├─ Models</span><span class="value">Flash, 3.8 Flash, Pro (1M ctx)</span></div>
+    <div class="stat"><span class="label">OmniRoute (Port 20128)</span><span class="value" style="color:#00ff66">✅ ONLINE</span></div>
+    <div class="stat"><span class="label">  ├─ Models</span><span class="value">94 (Groq/Cerebras)</span></div>
+    <div class="stat"><span class="label">OpenRouter</span><span class="value" style="color:#00ff66">✅ ONLINE</span></div>
+    <div class="stat"><span class="label">  ├─ Models</span><span class="value">56 кодинг-моделей</span></div>
+  </div>
+</div>
+`;
+
+  // === Databases ===
+  html += `
+<div class="card">
+  <div class="card-header">
+    <span class="title">💾 БАЗЫ ДАННЫХ</span>
+    <span class="badge">${Object.keys(databases).length} сервиса</span>
+  </div>
+  <div class="stats-grid">
+  `;
+  Object.entries(databases).forEach(([key, db]) => {
+    const statusColor = db.status === 'OK' ? '#00ff66' : '#ff4444';
+    html += `
+    <div class="stat">
+      <span class="label">${db.name || key}</span>
+      <span class="value" style="color:${statusColor}">${db.status} (${db.count || '?'})</span>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  // === Plugins ===
+  html += `
+<div class="card">
+  <div class="card-header">
+    <span class="title">🔌 ПЛАГИНЫ И АГЕНТЫ</span>
+    <span class="badge" style="${plugins.length === d.plugins?.active ? '' : 'background: rgba(255,187,0,0.2); color: #ffbb00;'}">${plugins.length} плагинов</span>
+  </div>
+  <div class="stats-grid">
+  `;
+  plugins.forEach(p => {
+    const active = d.plugins?.active === d.plugins?.loaded;
+    html += `
+    <div class="stat">
+      <span class="label">${p.name}</span>
+      <span class="value" style="color:${p.enabled ? '#00ff66' : '#ff4444'}">${p.enabled ? '✅ ВКЛ' : '❌ ВЫКЛ'}</span>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Consilium agents
+  html += `
+  <div style="margin-top:12px">
+    <div style="font-size:11px;color:#888;margin-bottom:6px">Консилиум (5 агентов)</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <span style="font-size:11px;padding:2px 8px;background:rgba(0,255,102,0.1);border-radius:3px;color:#00ff66">Antigravity</span>
+      <span style="font-size:11px;padding:2px 8px;background:rgba(0,255,102,0.1);border-radius:3px;color:#00ff66">OpenCode</span>
+      <span style="font-size:11px;padding:2px 8px;background:rgba(0,255,102,0.1);border-radius:3px;color:#00ff66">Serena</span>
+      <span style="font-size:11px;padding:2px 8px;background:rgba(0,255,102,0.1);border-radius:3px;color:#00ff66">KiloCode</span>
+      <span style="font-size:11px;padding:2px 8px;background:rgba(0,255,102,0.1);border-radius:3px;color:#00ff66">Eva</span>
+    </div>
+  </div>
+  </div>`;
+
+  // === Plugin Health ===
+  html += `
+<div class="card">
+  <div class="card-header">
+    <span class="title">✅ ПЛАГИН HEALTH CHECK</span>
+    <span class="badge">3/3 OK</span>
+  </div>
+  <div class="stats-grid">
+  `;
+  Object.entries(pluginHealth).forEach(([name, health]) => {
+    const isOk = health.status === 'healthy';
+    html += `
+    <div class="stat">
+      <span class="label">${name}</span>
+      <span class="value" style="color:${isOk ? '#00ff66' : '#ffbb00'}">${isOk ? '✅' : '⚠️'} ${health.message}</span>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  // === Timeline ===
+  html += `
+<div class="card full-width">
+  <div class="card-header">
+    <span class="title">📜 TIMELINE — Журнал событий</span>
+    <span class="badge">${timelineEvents.length} events</span>
+  </div>
+  <div class="timeline" id="timeline">
+  `;
+  // Show last 15 events
+  timelineEvents.slice(-15).forEach(e => {
+    const colors = { success: '#00ff66', warn: '#ffbb00', error: '#ff4444' };
+    html += `
+    <div class="timeline-item">
+      <span class="time">${e.time}</span>
+      <span class="status-${e.type}" style="color:${colors[e.type]}">●</span>
+      <span class="msg">${e.msg}</span>
+    </div>`;
+  });
+  html += `
+  </div>
+</div>`;
+
+  // === Footer ===
+  html += `
+<div class="card full-width" style="background:rgba(0,0,0,0.3)">
+  <div class="card-header">
+    <span class="title">🌐 CONNECTED DOMAIN REGISTRY</span>
+    <span class="badge">6 доменов</span>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <a href="https://evabot.online" target="_blank" style="color:#00ddff;text-decoration:none;font-size:12px">evabot.online — AI Portal</a>
+    <a href="https://evaline.network" target="_blank" style="color:#00ff66;text-decoration:none;font-size:12px">evaline.network — Architecture Console (CURRENT)</a>
+    <a href="https://evaline.online" target="_blank" style="color:#ffbb00;text-decoration:none;font-size:12px">evaline.online — Identity & Services</a>
+    <a href="https://evaline.website" target="_blank" style="color:#888;text-decoration:none;font-size:12px">evaline.website — Central Hub</a>
+    <a href="https://github.com/evaline-online" target="_blank" style="color:#888;text-decoration:none;font-size:12px">github.com/evaline-online — 26 repos</a>
+    <span style="color:#888;font-size:11px">Business tier: business.evaline.online → Cloud Run</span>
+  </div>
+</div>
+`;
+
+  document.getElementById('dashboard').innerHTML = html;
+}
+
+// === Timeline ===
+function addTimelineEvent(type, msg) {
+  const time = new Date().toLocaleTimeString('ru-RU');
+  timelineEvents.push({ time, type, msg });
+  if (timelineEvents.length > 50) timelineEvents.shift();
+}
+
+// === Refresh countdown ===
+function startRefreshTimer() {
+  setInterval(() => {
+    refreshTimer--;
+    if (refreshTimer < 0) refreshTimer = REFRESH_INTERVAL / 1000;
+    document.getElementById('refresh-timer').textContent = refreshTimer;
+  }, 1000);
+
+  setInterval(fetchTelemetry, REFRESH_INTERVAL);
+  fetchTelemetry(); // initial load
+}
+startRefreshTimer();
+
+// === Initial render ===
+function showPlaceholder() {
+  const d = {
+    status: 'connecting', version: 'v0.1.0', server: 'evabot-online-edge',
+    uptimeSeconds: 0, systemLoad: '0.00', cpuCores: 8,
+    availableModels: 0, hasServerApiKey: false, authSource: 'Google ADC',
+    telemetry: {
+      frankfurt: { load: '0.00', cpuPct: 0, memUsedGb: '0', memTotalGb: 31, status: 'CONNECTING' },
+      iowa: { load: '0.00', cpuPct: 0, memUsedMb: 0, memTotalMb: 964, status: 'CONNECTING' },
+      meshLatencyMs: 0
+    },
+    databases: {
+      chroma: { name: 'ChromaDB Vector', count: 0, status: 'PENDING' },
+      fts: { name: 'SQLite FTS5 Index', count: 0, status: 'PENDING' },
+      memoryKb: { name: 'SQLite FTS5 Hybrid', count: 0, status: 'PENDING' },
+      mcp: { name: 'MCP SQLite', count: 0, status: 'PENDING' }
+    },
+    plugins: { loaded: 0, active: 0, list: [], health: {} },
+    _meta: { rateLimitRemaining: 0, rateLimitLimit: 100, fetchedAt: new Date().toISOString() }
+  };
+  renderDashboard(d);
+}
+showPlaceholder();
+</script>
+
+</body>
+</html>

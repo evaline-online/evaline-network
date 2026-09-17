@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Markdown ↔ HTML Dashboard</title>
+  <meta http-equiv="refresh" content="15">
+  <style>
+    /* === Base / Fallback styles (работают без JS) === */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      background: #0a0a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .header {
+      background: #1a1a2e;
+      border-bottom: 2px solid #00ff66;
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { color: #00ff66; font-size: 18px; font-weight: 700; }
+    .header .subtitle { color: #888; font-size: 12px; margin-top: 4px; }
+    .layout { display: flex; gap: 2px; padding: 20px 32px; }
+    .panel { flex: 1; display: flex; flex-direction: column; }
+    .panel-label {
+      background: #162134;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #00ddff;
+      border: 1px solid #333;
+    }
+    .panel-content {
+      border: 1px solid #333;
+      background: #0a0a0a;
+      padding: 16px;
+      min-height: 300px;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow: auto;
+    }
+    textarea {
+      width: 100%; height: 100%; min-height: 300px;
+      background: #050505; color: #00ff66; border: 1px solid #333;
+      padding: 12px; font-family: inherit; font-size: 13px;
+      resize: vertical; tab-size: 2;
+      transition: border-color 0.3s;
+    }
+    textarea:focus { border-color: #00ff66; outline: none; box-shadow: 0 0 15px rgba(0,255,102,0.3); }
+    .preview { background: #ffffff; color: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    .preview h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 6px; }
+    .preview h2 { color: #34495e; border-bottom: 1px solid #bdc3c7; padding-bottom: 4px; }
+    .preview code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    .preview pre { background: #2c3e50; color: #ecf0f1; padding: 12px; border-radius: 5px; overflow-x: auto; }
+    .preview pre code { background: none; padding: 0; }
+    .preview table { border-collapse: collapse; width: 100%; }
+    .preview th, .preview td { border: 1px solid #ddd; padding: 6px 10px; }
+    .preview th { background: #34495e; color: white; }
+    .preview blockquote { border-left: 4px solid #3498db; margin: 8px 0; padding: 8px 16px; background: #f8f9fa; }
+    .footer { text-align: center; padding: 12px; color: #666; font-size: 11px; border-top: 1px solid #333; }
+
+    /* === Live enhancement (JS) === */
+    .live-only { display: none; }
+    body.js-enabled .live-only { display: block; }
+    body.js-enabled .fallback-display { display: none; }
+    body.js-enabled textarea { display: none; }
+
+    /* === Dashboard overlay === */
+    .telemetry-overlay {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: rgba(10,10,26,0.95);
+      backdrop-filter: blur(10px);
+      z-index: 100; padding: 20px;
+      display: none; overflow-y: auto;
+    }
+    body.js-enabled .telemetry-overlay { display: block; }
+    .close-btn {
+      position: fixed; top: 12px; right: 16px;
+      background: #ff4444; color: #fff; border: none;
+      width: 28px; height: 28px; border-radius: 50%;
+      font-size: 16px; cursor: pointer;
+      z-index: 200; display: none;
+    }
+    body.js-enabled .close-btn { display: block; }
+    .telemetry-content { max-width: 1200px; margin: 0 auto; }
+    .metric-card {
+      background: #1a1a2e; border: 1px solid #333; border-radius: 8px;
+      padding: 16px; margin-bottom: 12px;
+      box-shadow: 0 0 15px rgba(0,255,102,0.1);
+    }
+    .metric-card h3 { color: #00ddff; margin-bottom: 12px; font-size: 15px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 10px; }
+    .metric-item {
+      background: #0f0f23; padding: 10px; border-radius: 6px;
+      border-left: 3px solid #0f3460; text-align: center;
+    }
+    .metric-item .val { font-size: 22px; font-weight: 700; color: #00ff66; font-variant-numeric: tabular-nums; }
+    .metric-item .lbl { font-size: 10px; color: #888; margin-top: 4px; text-transform: uppercase; }
+    .metric-item.warn .val { color: #ffbb00; }
+    .metric-item.warn { border-left-color: #ffbb00; }
+    .metric-item.danger .val { color: #ff4444; animation: blink 1s infinite; }
+    .metric-item.danger { border-left-color: #ff4444; }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+    .pulse-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#00ff66; box-shadow:0 0 8px #00ff66; margin-right:6px; animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+    .status-banner {
+      background: #162134; padding: 10px 16px; font-size: 12px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #333;
+    }
+    .status-banner .status { color: #00ff66; }
+    .status-banner .countdown { color: #00ddff; font-variant-numeric: tabular-nums; }
+
+    /* Button styles */
+    .btn-bar { padding: 12px 32px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      padding: 8px 16px; border: 1px solid #333; background: #162134;
+      color: #e0e0e0; font-size: 12px; cursor: pointer; border-radius: 4px;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .btn:hover { background: #1a1a2e; border-color: #00ff66; }
+    .btn.active { background: #00aa44; color: #050505; border-color: #00cc44; }
+    .btn.ghost { background: transparent; }
+
+    @media (max-width: 768px) {
+      .layout { flex-direction: column; }
+      .header { padding: 12px 16px; }
+      .btn-bar { padding: 8px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- === FALLBACK: No-JS version (чистый markdown отображается) === -->
+<noscript>
+  <style>
+    body { background: #fff; color: #000; font-family: serif; }
+    .noscript-warning {
+      background: #fff3cd; border: 1px solid #ffc107; padding: 12px 20px;
+      margin: 0 auto; max-width: 800px; font-size: 14px;
+    }
+    .noscript-warning a { color: #856404; }
+  </style>
+  <div class="noscript-warning">
+    ⚠️ <strong>JavaScript отключён.</strong> Отображена статическая версия страницы.
+    Для полноценной работы живого конвертера и телеметрии включите JavaScript.<br>
+    <a href="https://evaline.network/md-converter.html">Альтернативная страница конвертера</a> |
+    <a href="https://evaline.network/telemetry.html">Телеметрия в отдельной вкладке</a>
+  </div>
+</noscript>
+
+<div class="header">
+  <div>
+    <h1>▶ Live Markdown ↔ HTML Dashboard</h1>
+    <div class="subtitle">evaline.network • Real-time converter + telemetry</div>
+  </div>
+  <div style="text-align:right">
+    <div style="color:#00ff66;font-size:13px">● <span class="pulse-dot"></span> LIVE</div>
+    <div style="color:#888;font-size:11px;margin-top:4px">Auto-refresh: <span id="countdown" class="countdown">10</span>s</div>
+  </div>
+</div>
+
+<div class="btn-bar">
+  <button class="btn active" onclick="switchMode('md2html')">Markdown → HTML</button>
+  <button class="btn" onclick="switchMode('html2md')">HTML → Markdown</button>
+  <button class="btn" onclick="showTelemetry()">📊 Телеметрия кластера</button>
+  <button class="btn ghost" onclick="clearAll()">🗑 Clear</button>
+  <button class="btn ghost" onclick="downloadFile()">💾 Save</button>
+  <button class="btn ghost" onclick="copyToClipboard()">📋 Copy</button>
+</div>
+
+<div class="layout">
+  <!-- === EDITOR PANEL === -->
+  <div class="panel">
+    <div class="panel-label">EDITOR (Markdown)</div>
+    <textarea id="editor" spellcheck="false">## Live Markdown Dashboard
+
+Welcome to the **evaline.network** real-time converter!
+
+### Features
+- ✅ Live preview with syntax highlighting
+- ✅ Tables, code blocks, blockquotes
+- ✅ Real-time cluster telemetry
+- ✅ Works without JavaScript (fallback)
+
+### Quick Reference
+| Element | Syntax |
+|---------|--------|
+| **Bold** | `**bold**` |
+| *Italic* | `*italic*` |
+| `Code` | `` `code` `` |
+| Link | `[text](url)` |
+
+### Cluster Status
+Check the **📊 Телеметрия** panel for live system metrics from EvaBrain (Frankfurt) and EvaFace (Iowa).
+</textarea>
+    <!-- Fallback display for no-JS -->
+    <div class="panel-label fallback-display">PREVIEW (Static Markdown)</div>
+    <div class="panel-content fallback-display" id="static-preview">
+## Live Markdown Dashboard
+
+Welcome to the **evaline.network** real-time converter!
+
+### Features
+- ✅ Live preview with syntax highlighting
+- ✅ Tables, code blocks, blockquotes
+- ✅ Real-time cluster telemetry
+- ✅ Works without JavaScript (fallback)
+
+### Quick Reference
+| Element | Syntax |
+|---------|--------|
+| **Bold** | `**bold**` |
+| *Italic* | `*italic*` |
+| `Code` | `` `code` `` |
+| Link | `[text](url)` |
+
+### Cluster Status
+Check the telemetry panel for live system metrics.
+    </div>
+  </div>
+
+  <!-- === PREVIEW PANEL (LIVE) === -->
+  <div class="panel live-only">
+    <div class="panel-label">HTML PREVIEW (Live)</div>
+    <iframe id="preview-frame"></iframe>
+  </div>
+
+  <!-- === MARKDOWN PREVIEW (HTML→MD mode) === -->
+  <div class="panel live-only" id="md-preview-panel" style="display:none">
+    <div class="panel-label">MARKDOWN OUTPUT (Live)</div>
+    <iframe id="md-preview-frame"></iframe>
+  </div>
+</div>
+
+<div class="footer">
+  <span>evaline.network • Dashboard v1.0 • Dual-Node Cluster</span>
+  <span>EvaFace (Iowa) ⟷ EvaBrain (Frankfurt) · 118ms mesh</span>
+</div>
+
+<!-- === TELEMETRY OVERLAY === -->
+<button class="close-btn" onclick="hideTelemetry()">✕</button>
+<div class="telemetry-overlay" id="telemetry">
+  <div class="telemetry-content">
+    <h2 style="color:#00ff66;margin-bottom:4px">📡 LIVE CLUSTER TELEMETRY</h2>
+    <div style="color:#888;font-size:12px;margin-bottom:16px">
+      <span class="pulse-dot"></span> Обновление каждые 10 секунд
+      <span style="float:right">Последний запрос: <span id="last-update" style="color:#00ddff">--:--:--</span></span>
+    </div>
+
+    <div class="status-banner">
+      <span>Статус: <span class="status" id="cluster-status">connecting...</span></span>
+      <span>Следующее обновление через <span id="countdown-2" class="countdown">10</span>s</span>
+    </div>
+
+    <!-- EvaBrain (Frankfurt) -->
+    <div class="metric-card">
+      <h3>🧠 EVABRAIN — Frankfurt (evabot-agent-vm) · c3-standard-8</h3>
+      <div class="metric-grid" id="frankfurt-metrics">
+        <div class="metric-item"><div class="val" id="fr-cpu">--</div><div class="lbl">CPU %</div></div>
+        <div class="metric-item"><div class="val" id="fr-load">--</div><div class="lbl">Load Avg</div></div>
+        <div class="metric-item"><div class="val" id="fr-ram">--</div><div class="lbl">RAM GB</div></div>
+        <div class="metric-item"><div class="val" id="fr-status">--</div><div class="lbl">Status</div></div>
+      </div>
+    </div>
+
+    <!-- EvaFace (Iowa) -->
+    <div class="metric-card">
+      <h3>👁️ EVAFACE — Iowa (evaline-micro-vm) · e2-micro</h3>
+      <div class="metric-grid" id="iowa-metrics">
+        <div class="metric-item"><div class="val" id="ia-cpu">--</div><div class="lbl">CPU %</div></div>
+        <div class="metric-item"><div class="val" id="ia-load">--</div><div class="lbl">Load Avg</div></div>
+        <div class="metric-item"><div class="val" id="ia-ram">--</div><div class="lbl">RAM MB</div></div>
+        <div class="metric-item"><div class="val" id="ia-status">--</div><div class="lbl">Status</div></div>
+      </div>
+    </div>
+
+    <!-- Databases + Mesh -->
+    <div class="metric-card">
+      <h3>💾 ИНФРАСТРУКТУРА</h3>
+      <div class="metric-grid">
+        <div class="metric-item"><div class="val" id="mesh-latency">--</div><div class="lbl">Mesh RTT (ms)</div></div>
+        <div class="metric-item"><div class="val" id="db-chroma">--</div><div class="lbl">ChromaDB Vectors</div></div>
+        <div class="metric-item"><div class="val" id="db-fts">--</div><div class="lbl">FTS5 Docs</div></div>
+        <div class="metric-item"><div class="val" id="models-online">--</div><div class="lbl">Models Online</div></div>
+        <div class="metric-item"><div class="val" id="uptime">--</div><div class="lbl">Uptime</div></div>
+        <div class="metric-item"><div class="val" id="rate-limit">--</div><div class="lbl">Rate Limit</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- === JS ENHANCEMENT === -->
+<script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/lib/marked.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.min.js"></script>
+<script>
+  // Mark JS as enabled
+  document.body.classList.add('js-enabled');
+
+  // === Initialize markdown parsing ===
+  marked.setOptions({
+    gfm: true, breaks: true,
+    headerIds: true,
+    highlight: function(code, lang) {
+      return code;
+    }
+  });
+  const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+
+  // === DOM elements ===
+  const editor = document.getElementById('editor');
+  const previewFrame = document.getElementById('preview-frame');
+  const mdPreviewPanel = document.getElementById('md-preview-panel');
+  const mdPreviewFrame = document.getElementById('md-preview-frame');
+  const countdownEl = document.getElementById('countdown');
+  const countdown2El = document.getElementById('countdown-2');
+
+  // === Live rendering ===
+  const PREVIEW_CSS = `
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #fff; color: #1a1a1a; line-height: 1.6; }
+    h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+    h2 { color: #34495e; border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; }
+    h3 { color: #2c3e50; }
+    code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #2c3e50; color: #ecf0f1; padding: 16px; border-radius: 5px; overflow-x: auto; }
+    pre code { background: none; padding: 0; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #bdc3c7; padding: 8px 12px; text-align: left; }
+    th { background: #34495e; color: white; }
+    tr:nth-child(even) { background: #f8f9fa; }
+    blockquote { border-left: 4px solid #3498db; margin: 12px 0; padding: 12px 20px; background: #f8f9fa; }
+    ul, ol { margin-left: 24px; }
+    a { color: #3498db; }
+  `;
+
+  function renderPreview() {
+    if (!previewFrame) return;
+    const md = editor ? editor.value : '';
+    let html = '';
+    try {
+      html = marked.parse(md);
+    } catch(e) {
+      html = '<p style="color:red">Error: ' + e.message + '</p>';
+    }
+    previewFrame.srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' + PREVIEW_CSS + '</style></head><body>' + html + '</body></html>';
+  }
+
+  function renderMdPreview() {
+    if (!mdPreviewFrame) return;
+    const html = editor ? editor.value : '';
+    let md = '';
+    try {
+      md = turndownService.turndown(html);
+    } catch(e) {
+      md = 'Error: ' + e.message;
+    }
+    mdPreviewFrame.srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:monospace;background:#0a0a0a;color:#00ff66;padding:20px;white-space:pre-wrap;word-break:break-all}code{background:#1a1a2e;padding:2px 6px;border-radius:3px}pre{background:#162134;padding:16px;border-radius:5px;overflow-x:auto}pre code{background:none;padding:0}</style></head><body>' + md + '</body></html>';
+  }
+
+  function renderBoth() { renderPreview(); renderMdPreview(); }
+
+  // === Mode switching ===
+  let currentMode = 'md2html';
+  function switchMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    if (mode === 'md2html') {
+      previewFrame.parentElement.style.display = 'flex';
+      mdPreviewPanel.style.display = 'none';
+    } else {
+      previewFrame.parentElement.style.display = 'none';
+      mdPreviewPanel.style.display = 'flex';
+    }
+    renderBoth();
+  }
+
+  // === Telemetry fetch ===
+  let refreshTimer = 10;
+  async function fetchTelemetry() {
+    try {
+      const res = await fetch('/api/health', { cache: 'no-store' });
+      if (!res.ok) throw new Error(res.status);
+      const d = await res.json();
+      const rateRem = res.headers.get('x-ratelimit-remaining');
+
+      // Status badges
+      document.getElementById('cluster-status').textContent = d.status.toUpperCase();
+      document.getElementById('cluster-status').style.color = d.status === 'online' ? '#00ff66' : '#ff4444';
+
+      // Frankfurt metrics
+      const fr = d.telemetry?.frankfurt || {};
+      setMetric('fr-cpu', fr.cpuPct, 70);
+      document.getElementById('fr-load').textContent = fr.load || '--';
+      setMetric('fr-ram', fr.memUsedGb + '/' + fr.memTotalGb, 85);
+      document.getElementById('fr-status').innerHTML = '<span class="pulse-dot"></span>HEALTHY';
+
+      // Iowa metrics
+      const ia = d.telemetry?.iowa || {};
+      setMetric('ia-cpu', ia.cpuPct, 70);
+      document.getElementById('ia-load').textContent = ia.load || '--';
+      setMetric('ia-ram', ia.memUsedMb + '/' + ia.memTotalMb, 85);
+      document.getElementById('ia-status').innerHTML = '<span class="pulse-dot"></span>ONLINE';
+
+      // Infrastructure
+      document.getElementById('mesh-latency').textContent = d.telemetry?.meshLatencyMs || '--';
+      const db = d.databases || {};
+      document.getElementById('db-chroma').textContent = db.chroma?.count || '--';
+      document.getElementById('db-fts').textContent = db.fts?.count || '--';
+      document.getElementById('models-online').textContent = d.availableModels || '--';
+      document.getElementById('uptime').textContent = formatUptime(d.uptimeSeconds);
+      document.getElementById('rate-limit').textContent = rateRem ? rateRem + ' left' : '--';
+
+      document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+    } catch(e) {
+      document.getElementById('cluster-status').textContent = 'OFFLINE';
+      document.getElementById('cluster-status').style.color = '#ff4444';
+    }
+  }
+
+  function setMetric(id, val, threshold) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = val;
+    el.parentElement.className = 'metric-item';
+    if (typeof val === 'number' && !isNaN(val)) {
+      if (val > threshold) el.parentElement.classList.add('danger');
+      else if (val > threshold * 0.7) el.parentElement.classList.add('warn');
+    }
+  }
+
+  function formatUptime(s) {
+    const d = Math.floor(s/86400), h = Math.floor(s%86400/3600);
+    const m = Math.floor(s%3600/60), sec = Math.floor(s%60);
+    return d>0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m ${sec}s`;
+  }
+
+  // === Modal controls ===
+  function showTelemetry() {
+    document.getElementById('telemetry').style.display = 'block';
+    fetchTelemetry();
+  }
+  function hideTelemetry() {
+    document.getElementById('telemetry').style.display = 'none';
+  }
+
+  // === Editor actions ===
+  function clearAll() {
+    if (currentMode === 'md2html') { editor.value = ''; renderPreview(); }
+    else { editor.value = ''; renderMdPreview(); }
+  }
+
+  function downloadFile() {
+    const blob = currentMode === 'md2html'
+      ? new Blob([marked.parse(editor.value)], { type: 'text/html' })
+      : new Blob([turndownService.turndown(editor.value)], { type: 'text/markdown' });
+    const ext = currentMode === 'md2html' ? 'html' : 'md';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'dashboard.' + ext;
+    a.click(); URL.revokeObjectURL(url);
+  }
+
+  async function copyToClipboard() {
+    const text = currentMode === 'md2html' ? marked.parse(editor.value) : turndownService.turndown(editor.value);
+    try {
+      await navigator.clipboard.writeText(text);
+      const btn = event.target;
+      btn.textContent = '✅ Скопировано!';
+      setTimeout(() => btn.textContent = '📋 Copy', 2000);
+    } catch(e) {
+      alert('Copy failed: ' + e.message);
+    }
+  }
+
+  // === Refresh countdown ===
+  function startCountdown() {
+    setInterval(() => {
+      refreshTimer--;
+      if (refreshTimer <= 0) {
+        refreshTimer = 10;
+        renderBoth();
+      }
+      countdownEl.textContent = refreshTimer;
+      countdown2El.textContent = refreshTimer;
+    }, 1000);
+  }
+
+  // === Init ===
+  if (editor) {
+    editor.addEventListener('input', renderBoth);
+    renderBoth();
+  }
+  startCountdown();
+
+  // Auto-hide telemetry overlay
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hideTelemetry();
+  });
+</script>
+
+</body>
+</html>
